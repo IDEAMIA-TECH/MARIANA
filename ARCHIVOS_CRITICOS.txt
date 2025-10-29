@@ -1,0 +1,61 @@
+ARCHIVOS CRÍTICOS QUE DEBEN EXISTIR EN EL SERVIDOR:
+
+=== CONFIGURACIÓN (OBLIGATORIOS) ===
+config/database.php       - Conexión a BD
+config/config.php         - Configuración general  
+config/constants.php      - Constantes del sistema
+
+=== MODELOS (OBLIGATORIOS) ===
+models/Database.php        - Clase base de conexión
+models/User.php           - Modelo de usuario (para login)
+models/Project.php        - Modelo de proyectos
+models/Material.php       - Modelo de materiales
+models/Requirement.php    - Modelo de requerimientos
+models/Purchase.php       - Modelo de compras
+models/Delivery.php       - Modelo de entregas
+models/Report.php         - Modelo de reportes
+
+=== CONTROLADORES (OBLIGATORIOS) ===
+controllers/AuthController.php       - Login/logout
+controllers/ProjectController.php   - Gestión proyectos
+controllers/MaterialController.php  - Gestión materiales
+controllers/RequirementController.php - Requerimientos
+controllers/PurchaseController.php  - Compras
+controllers/DeliveryController.php   - Entregas
+controllers/DashboardController.php  - Dashboard
+controllers/ReportController.php     - Reportes
+
+=== INCLUDES (OBLIGATORIOS) ===
+includes/functions.php    - Funciones helper
+includes/auth.php         - Autenticación
+
+=== VISTAS (OBLIGATORIAS) ===
+views/layouts/header.php         - Layout común
+views/auth/login.php            - Página de login
+views/projects/index.php        - Lista proyectos
+views/projects/create.php       - Crear proyecto
+views/projects/edit.php         - Editar proyecto
+views/projects/dashboard.php    - Dashboard
+views/materials/index.php       - Lista materiales
+views/materials/create.php      - Crear material
+views/materials/edit.php        - Editar material
+views/requirements/index.php    - Requerimientos
+views/purchases/index.php       - Lista compras
+views/purchases/create.php      - Registrar compra
+views/deliveries/index.php      - Lista entregas
+views/deliveries/create.php     - Registrar entrega
+views/reports/project.php       - Reporte HTML
+
+=== ARCHIVOS PHP PRINCIPALES ===
+index.php         - Página principal
+login.php         - Login
+logout.php        - Logout
+projects.php      - Router proyectos
+materials.php     - Router materiales
+requirements.php - Router requerimientos
+purchases.php     - Router compras
+deliveries.php    - Router entregas
+dashboard.php     - Dashboard
+reports.php       - Reportes
+
+TOTAL: ~40 archivos PHP críticos
