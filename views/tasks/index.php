@@ -71,6 +71,85 @@ $isAdmin = hasRole(ROLE_ADMIN);
             </div>
         </div>
 
+        <?php if ($canEdit): ?>
+        <!-- Formulario para agregar tareas (múltiples a la vez) -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Agregar Tareas Principales</h5>
+                <div>
+                    <button type="button" class="btn btn-sm btn-light" onclick="toggleTaskView()" id="toggleTaskBtn">
+                        <i class="bi bi-list-check"></i> Modo Masivo
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Modo Simple (Una tarea a la vez) -->
+                <div id="single-task-mode">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTaskModal">
+                        <i class="bi bi-plus-circle"></i> Crear Tarea Individual
+                    </button>
+                    <small class="text-muted ms-2">O usa el botón "Nueva Tarea Principal" de arriba</small>
+                </div>
+
+                <!-- Modo Masivo (Varias tareas a la vez) -->
+                <div id="multiple-task-mode" style="display: none;">
+                    <form method="POST" action="<?= base_url('tasks.php') ?>" id="multipleTaskForm">
+                        <input type="hidden" name="_action" value="store">
+                        <input type="hidden" name="project_id" value="<?= $projectId ?>">
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label"><strong>Agregar múltiples tareas principales:</strong></label>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-success" onclick="addTaskRow()">
+                                        <i class="bi bi-plus-lg"></i> Agregar Fila
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="removeLastTaskRow()">
+                                        <i class="bi bi-dash-lg"></i> Quitar Fila
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                                <table class="table table-sm table-bordered table-hover">
+                                    <thead class="table-light sticky-top">
+                                        <tr>
+                                            <th style="width: 30px;">#</th>
+                                            <th style="width: 250px;">Nombre <span class="text-danger">*</span></th>
+                                            <th>Descripción</th>
+                                            <th style="width: 120px;">Estado</th>
+                                            <th style="width: 130px;">Responsable</th>
+                                            <th style="width: 130px;">Fecha Inicio</th>
+                                            <th style="width: 130px;">Fecha Fin</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="task-rows-container">
+                                        <!-- Las filas se agregarán dinámicamente -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="mt-3 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="badge bg-info" id="task-count">0 tareas</span>
+                                    <small class="text-muted ms-2">Usa "Agregar Fila" para crear más tareas</small>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-secondary" onclick="toggleTaskView()">
+                                        <i class="bi bi-arrow-left"></i> Modo Simple
+                                    </button>
+                                    <button type="submit" class="btn btn-primary" id="submit-multiple-tasks">
+                                        <i class="bi bi-check-circle"></i> Crear Tareas
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <!-- Lista de Tareas Principales -->
         <?php if (empty($mainTasks)): ?>
             <div class="card">
@@ -589,6 +668,123 @@ $isAdmin = hasRole(ROLE_ADMIN);
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Variables para el modo masivo de tareas
+        let taskRowCounter = 0;
+        const users = <?= json_encode(array_map(function($u) { return ['id' => $u['id'], 'nombre' => $u['nombre'], 'email' => $u['email']]; }, $users)) ?>;
+        
+        // Toggle entre modo simple y masivo para tareas
+        function toggleTaskView() {
+            const singleMode = document.getElementById('single-task-mode');
+            const multipleMode = document.getElementById('multiple-task-mode');
+            const toggleBtn = document.getElementById('toggleTaskBtn');
+            
+            if (multipleMode.style.display === 'none') {
+                singleMode.style.display = 'none';
+                multipleMode.style.display = 'block';
+                toggleBtn.innerHTML = '<i class="bi bi-list"></i> Modo Simple';
+                if (taskRowCounter === 0) {
+                    addTaskRow(); // Agregar primera fila automáticamente
+                }
+            } else {
+                singleMode.style.display = 'block';
+                multipleMode.style.display = 'none';
+                toggleBtn.innerHTML = '<i class="bi bi-list-check"></i> Modo Masivo';
+            }
+        }
+        
+        // Agregar nueva fila para tarea
+        function addTaskRow() {
+            taskRowCounter++;
+            const container = document.getElementById('task-rows-container');
+            const row = document.createElement('tr');
+            row.id = 'task-row-' + taskRowCounter;
+            
+            const estadoOptions = [
+                {value: 'pending', text: 'Pendiente'},
+                {value: 'in_progress', text: 'En Progreso'},
+                {value: 'completed', text: 'Completada'}
+            ];
+            
+            let responsableOptions = '<option value="">Sin asignar</option>';
+            users.forEach(function(user) {
+                responsableOptions += `<option value="${user.id}">${user.nombre}</option>`;
+            });
+            
+            row.innerHTML = `
+                <td class="text-center">${taskRowCounter}</td>
+                <td>
+                    <input type="text" class="form-control form-control-sm" 
+                           name="tasks[${taskRowCounter}][nombre]" 
+                           placeholder="Nombre de tarea" required>
+                </td>
+                <td>
+                    <input type="text" class="form-control form-control-sm" 
+                           name="tasks[${taskRowCounter}][descripcion]" 
+                           placeholder="Descripción opcional">
+                </td>
+                <td>
+                    <select class="form-select form-select-sm" name="tasks[${taskRowCounter}][estado]">
+                        ${estadoOptions.map(opt => `<option value="${opt.value}">${opt.text}</option>`).join('')}
+                    </select>
+                </td>
+                <td>
+                    <select class="form-select form-select-sm" name="tasks[${taskRowCounter}][responsable_id]">
+                        ${responsableOptions}
+                    </select>
+                </td>
+                <td>
+                    <input type="date" class="form-control form-control-sm" 
+                           name="tasks[${taskRowCounter}][fecha_inicio]">
+                </td>
+                <td>
+                    <input type="date" class="form-control form-control-sm" 
+                           name="tasks[${taskRowCounter}][fecha_fin_estimada]">
+                </td>
+            `;
+            
+            container.appendChild(row);
+            updateTaskCount();
+        }
+        
+        // Eliminar última fila
+        function removeLastTaskRow() {
+            if (taskRowCounter > 0) {
+                const row = document.getElementById('task-row-' + taskRowCounter);
+                if (row) {
+                    row.remove();
+                    taskRowCounter--;
+                    updateTaskCount();
+                }
+            }
+        }
+        
+        // Actualizar contador de tareas
+        function updateTaskCount() {
+            const countBadge = document.getElementById('task-count');
+            if (countBadge) {
+                countBadge.textContent = taskRowCounter + ' tarea(s)';
+            }
+        }
+        
+        // Validación del formulario masivo
+        document.getElementById('multipleTaskForm')?.addEventListener('submit', function(e) {
+            const rows = document.querySelectorAll('#task-rows-container tr');
+            let hasValidTask = false;
+            
+            rows.forEach(function(row) {
+                const nombreInput = row.querySelector('input[name*="[nombre]"]');
+                if (nombreInput && nombreInput.value.trim()) {
+                    hasValidTask = true;
+                }
+            });
+            
+            if (!hasValidTask) {
+                e.preventDefault();
+                alert('Por favor, ingresa al menos una tarea con nombre válido.');
+                return false;
+            }
+        });
+        
         // Actualizar máximo del input de cantidad cuando se selecciona material
         document.querySelectorAll('[id^="requirement_"]').forEach(function(select) {
             select.addEventListener('change', function() {

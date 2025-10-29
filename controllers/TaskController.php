@@ -102,7 +102,6 @@ class TaskController
         }
 
         $projectId = (int)($_POST['project_id'] ?? 0);
-        $parentId = !empty($_POST['parent_id']) ? (int)$_POST['parent_id'] : null;
 
         if (!$projectId) {
             setFlashMessage('error', 'Proyecto no especificado');
@@ -124,14 +123,68 @@ class TaskController
             return;
         }
 
+        $user = getCurrentUser();
+        
+        // MODO MASIVO: Múltiples tareas principales
+        if (isset($_POST['tasks']) && is_array($_POST['tasks'])) {
+            $created = 0;
+            $errors = [];
+            
+            foreach ($_POST['tasks'] as $idx => $taskData) {
+                if (!is_array($taskData)) continue;
+                
+                $nombre = trim($taskData['nombre'] ?? '');
+                if (empty($nombre)) {
+                    continue; // Saltar tareas sin nombre
+                }
+                
+                $data = [
+                    'project_id' => $projectId,
+                    'parent_id' => null, // Siempre tareas principales en modo masivo
+                    'nombre' => $nombre,
+                    'descripcion' => trim($taskData['descripcion'] ?? ''),
+                    'estado' => $taskData['estado'] ?? 'pending',
+                    'fecha_inicio' => !empty($taskData['fecha_inicio']) ? $taskData['fecha_inicio'] : null,
+                    'fecha_fin_estimada' => !empty($taskData['fecha_fin_estimada']) ? $taskData['fecha_fin_estimada'] : null,
+                    'responsable_id' => !empty($taskData['responsable_id']) ? (int)$taskData['responsable_id'] : null,
+                    'created_by' => $user['id']
+                ];
+                
+                $taskId = Task::create($data);
+                if ($taskId) {
+                    $created++;
+                } else {
+                    $errors[] = "Tarea: " . $nombre;
+                }
+            }
+            
+            $message = '';
+            if ($created > 0) {
+                $message .= "$created tarea(s) creada(s) exitosamente. ";
+            }
+            if (!empty($errors)) {
+                $message .= "Errores: " . count($errors) . " tarea(s).";
+            }
+            
+            if ($created > 0) {
+                setFlashMessage('success', trim($message));
+            } else {
+                setFlashMessage('info', 'No se crearon tareas. Verifica que tengan nombres válidos.');
+            }
+            
+            redirect(base_url("tasks.php?project_id=$projectId"));
+            return;
+        }
+        
+        // MODO SIMPLE: Una sola tarea (subtarea o principal)
+        $parentId = !empty($_POST['parent_id']) ? (int)$_POST['parent_id'] : null;
+
         $nombre = trim($_POST['nombre'] ?? '');
         if (empty($nombre)) {
             setFlashMessage('error', 'El nombre de la tarea es requerido');
             redirect(base_url("tasks.php?project_id=$projectId"));
             return;
         }
-
-        $user = getCurrentUser();
         
         $data = [
             'project_id' => $projectId,
