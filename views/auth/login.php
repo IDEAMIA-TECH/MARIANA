@@ -76,13 +76,6 @@
                                 <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
                             </button>
                         </form>
-
-                        <hr class="my-4">
-
-                        <div class="text-center text-muted small">
-                            <p class="mb-0">Credenciales por defecto:</p>
-                            <p class="mb-0"><strong>admin@sistema.com</strong> / <strong>admin123</strong></p>
-                        </div>
                     </div>
                 </div>
             </div>
