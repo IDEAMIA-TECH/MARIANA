@@ -5,8 +5,7 @@ declare(strict_types=1);
  * Verificación de autenticación y sesión
  */
 
-require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../models/Database.php';
+// Nota: config.php y functions.php deben estar cargados antes de incluir este archivo
 
 /**
  * Verificar si el usuario está autenticado

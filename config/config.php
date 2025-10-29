@@ -13,13 +13,11 @@ define('APP_URL', 'http://localhost/control-materiales');
 define('TIMEZONE', 'America/Mexico_City');
 date_default_timezone_set(TIMEZONE);
 
-// Seguridad
+// Seguridad de sesión (DEBE estar antes de session_start)
 define('SESSION_LIFETIME', 3600); // 1 hora
-ini_set('session.cookie_httponly', 1);
-ini_set('session.use_only_cookies', 1);
-
-// Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.cookie_httponly', 1);
+    ini_set('session.use_only_cookies', 1);
     session_start();
 }
 

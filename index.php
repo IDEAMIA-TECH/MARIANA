@@ -1,16 +1,31 @@
 <?php
 declare(strict_types=1);
 
+// Cargar configuración
+require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/constants.php';
+
+// Cargar funciones auxiliares
 require_once __DIR__ . '/includes/functions.php';
-require_once __DIR__ . '/includes/auth.php';
+
+// Cargar modelos
 require_once __DIR__ . '/models/Database.php';
+
+// Cargar utilidades de autenticación
+require_once __DIR__ . '/includes/auth.php';
 
 // Requerir autenticación
 requireAuth();
 
+// Obtener usuario actual
 $user = getCurrentUser();
+if (!$user) {
+    // Si no se puede obtener el usuario, cerrar sesión
+    logout();
+    setFlashMessage('error', 'Tu sesión expiró. Por favor inicia sesión nuevamente.');
+    redirect(base_url('login.php'));
+}
 
 ?>
 <!DOCTYPE html>
