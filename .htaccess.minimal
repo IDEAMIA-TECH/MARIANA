@@ -1,0 +1,12 @@
+# Versión mínima de .htaccess para debugging
+# Si el error persiste, renombra este archivo a .htaccess
+# y elimina el otro
+
+# Solo habilitar rewrite si es necesario
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
+

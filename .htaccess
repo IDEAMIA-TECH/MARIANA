@@ -1,35 +1,19 @@
-# Configuración Apache para Control de Materiales
+# Configuración Apache - Versión Simplificada
+# Si aún tienes error 500, prueba renombrar este archivo a .htaccess.backup temporalmente
 
-RewriteEngine On
-RewriteBase /
-
-# Proteger archivos de configuración
-<FilesMatch "^(config|includes)">
-    Order deny,allow
-    Deny from all
-</FilesMatch>
-
-# Proteger archivos PHP de instalación en producción
-<FilesMatch "^(install|verify_tables|install_tables)\.php$">
-    Order deny,allow
-    Deny from all
-    # Permitir solo desde localhost (descomentar en desarrollo)
-    # Allow from 127.0.0.1
-</FilesMatch>
-
-# Redirigir a index.php si archivo no existe (para routing simple)
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php [QSA,L]
-
-# Seguridad adicional
-<IfModule mod_headers.c>
-    Header set X-Content-Type-Options "nosniff"
-    Header set X-Frame-Options "SAMEORIGIN"
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Si la app está en un subdirectorio, descomenta y ajusta:
+    # RewriteBase /subdirectorio/
+    
+    # Solo redirigir si el archivo no existe físicamente
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule . index.php [L]
 </IfModule>
 
-# Comprimir respuestas
-<IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript
-</IfModule>
+# Prevenir listado de directorios
+Options -Indexes
 
+# Si tienes problemas, comenta todo lo demás y deja solo esto arriba
