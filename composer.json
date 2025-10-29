@@ -1,0 +1,19 @@
+{
+    "name": "control-materiales/proyecto",
+    "description": "Sistema de Control de Material para Proyectos",
+    "type": "project",
+    "require": {
+        "php": ">=8.1",
+        "phpoffice/phpspreadsheet": "^1.29",
+        "tecnickcom/tcpdf": "^6.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "models/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}
+

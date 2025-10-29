@@ -81,37 +81,7 @@ if (!$user) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="<?= base_url('index.php') ?>">
-                <i class="bi bi-box-seam"></i> <?= h(APP_NAME) ?>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= base_url('index.php') ?>">
-                            <i class="bi bi-house"></i> Inicio
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle"></i> <?= h($user['nombre']) ?>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><span class="dropdown-item-text"><small>Rol: <?= h($user['rol']) ?></small></span></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="<?= base_url('logout.php') ?>">
-                                <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
-                            </a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <?php include __DIR__ . '/views/layouts/header.php'; ?>
 
     <div class="container mt-4">
         <?php 
@@ -140,7 +110,9 @@ if (!$user) {
                                         <i class="bi bi-folder text-primary" style="font-size: 2rem;"></i>
                                         <h5 class="mt-2">Proyectos</h5>
                                         <p class="text-muted">Gestiona tus proyectos</p>
-                                        <small class="text-muted">Próximamente</small>
+                                        <a href="<?= base_url('projects.php') ?>" class="btn btn-primary btn-sm mt-2">
+                                            <i class="bi bi-arrow-right"></i> Ver Proyectos
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -150,7 +122,13 @@ if (!$user) {
                                         <i class="bi bi-box text-success" style="font-size: 2rem;"></i>
                                         <h5 class="mt-2">Materiales</h5>
                                         <p class="text-muted">Catálogo de materiales</p>
-                                        <small class="text-muted">Próximamente</small>
+                                        <?php if (hasAnyRole([ROLE_ADMIN, ROLE_PM])): ?>
+                                            <a href="<?= base_url('materials.php') ?>" class="btn btn-success btn-sm mt-2">
+                                                <i class="bi bi-arrow-right"></i> Ver Materiales
+                                            </a>
+                                        <?php else: ?>
+                                            <small class="text-muted">Solo Admin/PM</small>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -158,9 +136,11 @@ if (!$user) {
                                 <div class="card border-info">
                                     <div class="card-body text-center">
                                         <i class="bi bi-graph-up text-info" style="font-size: 2rem;"></i>
-                                        <h5 class="mt-2">Dashboard</h5>
+                                        <h5 class="mt-2">Dashboard & Reportes</h5>
                                         <p class="text-muted">Ver avance y estadísticas</p>
-                                        <small class="text-muted">Próximamente</small>
+                                        <a href="<?= base_url('projects.php') ?>" class="btn btn-info btn-sm mt-2">
+                                            <i class="bi bi-arrow-right"></i> Ver Proyectos
+                                        </a>
                                     </div>
                                 </div>
                             </div>
