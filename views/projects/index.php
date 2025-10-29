@@ -112,6 +112,10 @@ $canCreate = hasAnyRole([ROLE_ADMIN, ROLE_PM]);
                                                    class="btn btn-sm btn-info" title="Requerimientos">
                                                     <i class="bi bi-list-ul"></i>
                                                 </a>
+                                                <a href="<?= base_url("tasks.php?project_id={$project['id']}") ?>" 
+                                                   class="btn btn-sm btn-purple" title="Tareas" style="background-color: #6f42c1; border-color: #6f42c1; color: white;">
+                                                    <i class="bi bi-list-check"></i>
+                                                </a>
                                                 <?php if (hasAnyRole([ROLE_ADMIN, ROLE_PM])): ?>
                                                 <a href="<?= base_url("purchases.php?project_id={$project['id']}") ?>" 
                                                    class="btn btn-sm btn-success" title="Compras">

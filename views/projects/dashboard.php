@@ -174,26 +174,84 @@ $projectId = $project['id'];
                             Agregar Materiales
                         </a>
                     </div>
-                <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Material</th>
-                                    <th>Requerido</th>
-                                    <th>Comprado</th>
-                                    <th>Disponible</th>
-                                    <th>Entregado</th>
-                                    <th>% Entregado</th>
-                                    <th>% En Almacén</th>
-                                    <th>% Faltante</th>
-                                    <th>Costo Promedio</th>
-                                    <th>Total</th>
-                                    <th>Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($requirements as $req): 
+                <?php else: 
+                    // Agrupar requerimientos por categoría
+                    $requirementsByCategory = [];
+                    $categoryTotals = [];
+                    
+                    foreach ($requirements as $req) {
+                        $categoria = $req['categoria'] ?? 'Sin Categoría';
+                        if (!isset($requirementsByCategory[$categoria])) {
+                            $requirementsByCategory[$categoria] = [];
+                            $categoryTotals[$categoria] = [
+                                'qty_requerida' => 0,
+                                'total_comprada' => 0,
+                                'qty_disponible' => 0,
+                                'qty_entregada' => 0,
+                                'total_costo' => 0,
+                                'pct_entregado' => 0,
+                                'pct_disponible' => 0,
+                                'pct_faltante' => 0
+                            ];
+                        }
+                        $requirementsByCategory[$categoria][] = $req;
+                        
+                        // Sumar totales por categoría
+                        $categoryTotals[$categoria]['qty_requerida'] += $req['qty_requerida'] ?? 0;
+                        $categoryTotals[$categoria]['total_comprada'] += $req['total_comprada'] ?? 0;
+                        $categoryTotals[$categoria]['qty_disponible'] += $req['qty_disponible'] ?? 0;
+                        $categoryTotals[$categoria]['qty_entregada'] += $req['qty_entregada'] ?? 0;
+                        $categoryTotals[$categoria]['total_costo'] += $req['total_costo'] ?? 0;
+                    }
+                    
+                    // Calcular porcentajes por categoría
+                    foreach ($categoryTotals as $cat => $totals) {
+                        if ($totals['qty_requerida'] > 0) {
+                            $categoryTotals[$cat]['pct_entregado'] = round(($totals['qty_entregada'] / $totals['qty_requerida']) * 100, 1);
+                            $categoryTotals[$cat]['pct_disponible'] = round(($totals['qty_disponible'] / $totals['qty_requerida']) * 100, 1);
+                            $categoryTotals[$cat]['pct_faltante'] = max(0, round(100 - $categoryTotals[$cat]['pct_entregado'] - $categoryTotals[$cat]['pct_disponible'], 1));
+                        }
+                    }
+                    
+                    // Ordenar categorías alfabéticamente
+                    ksort($requirementsByCategory);
+                ?>
+                    <?php foreach ($requirementsByCategory as $categoria => $categoryRequirements): 
+                        $categoryTotal = $categoryTotals[$categoria];
+                        $categoryCount = count($categoryRequirements);
+                    ?>
+                        <div class="mb-4">
+                            <h5 class="mb-3 border-bottom pb-2">
+                                <i class="bi bi-folder-fill text-primary"></i> 
+                                <?= h($categoria) ?> 
+                                <span class="badge bg-secondary"><?= $categoryCount ?> material(es)</span>
+                                <small class="text-muted ms-3">
+                                    Avance: 
+                                    <span class="badge bg-<?= $categoryTotal['pct_entregado'] >= 100 ? 'success' : ($categoryTotal['pct_entregado'] > 0 ? 'warning' : 'danger') ?>">
+                                        <?= $categoryTotal['pct_entregado'] ?>%
+                                    </span>
+                                </small>
+                            </h5>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Material</th>
+                                            <th>Requerido</th>
+                                            <th>Comprado</th>
+                                            <th>Disponible</th>
+                                            <th>Entregado</th>
+                                            <th>% Entregado</th>
+                                            <th>% En Almacén</th>
+                                            <th>% Faltante</th>
+                                            <th>Costo Promedio</th>
+                                            <th>Total</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($categoryRequirements as $req): 
                                     $pctEntregado = (float)$req['pct_entregado'];
                                     $pctDisponible = (float)$req['pct_disponible'];
                                     $pctFaltante = max(0, (float)$req['pct_faltante']);
@@ -264,23 +322,105 @@ $projectId = $project['id'];
                                         <td>
                                             <span class="badge bg-<?= $estadoColor ?> status-badge"><?= $estadoTexto ?></span>
                                         </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                            <tfoot>
-                                <tr class="table-active">
-                                    <th>TOTALES</th>
-                                    <th><?= number_format($kpis['total_requerido'], 2) ?></th>
-                                    <th><?= number_format($kpis['total_comprado'], 2) ?></th>
-                                    <th><?= number_format($kpis['total_disponible'], 2) ?></th>
-                                    <th><strong><?= number_format($kpis['total_entregado'], 2) ?></strong></th>
-                                    <th colspan="3"></th>
-                                    <th></th>
-                                    <th><strong><?= formatCurrency($kpis['total_invertido']) ?></strong></th>
-                                    <th></th>
-                                </tr>
-                            </tfoot>
-                        </table>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                    <tfoot class="table-active fw-bold">
+                                        <tr>
+                                            <td><strong>Subtotal <?= h($categoria) ?>:</strong></td>
+                                            <td><?= number_format($categoryTotal['qty_requerida'], 2) ?></td>
+                                            <td><?= number_format($categoryTotal['total_comprada'], 2) ?></td>
+                                            <td><?= number_format($categoryTotal['qty_disponible'], 2) ?></td>
+                                            <td><strong><?= number_format($categoryTotal['qty_entregada'], 2) ?></strong></td>
+                                            <td>
+                                                <span class="badge bg-<?= $categoryTotal['pct_entregado'] >= 100 ? 'success' : 'primary' ?>">
+                                                    <?= $categoryTotal['pct_entregado'] ?>%
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-warning"><?= $categoryTotal['pct_disponible'] ?>%</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-<?= $categoryTotal['pct_faltante'] > 0 ? 'danger' : 'success' ?>">
+                                                    <?= $categoryTotal['pct_faltante'] ?>%
+                                                </span>
+                                            </td>
+                                            <td></td>
+                                            <td><strong><?= formatCurrency($categoryTotal['total_costo']) ?></strong></td>
+                                            <td>
+                                                <?php
+                                                $catEstado = 'success';
+                                                $catEstadoTexto = 'Completo';
+                                                if ($categoryTotal['pct_entregado'] < 100) {
+                                                    if ($categoryTotal['pct_disponible'] > 0) {
+                                                        $catEstado = 'warning';
+                                                        $catEstadoTexto = 'En Proceso';
+                                                    } elseif ($categoryTotal['total_comprada'] >= $categoryTotal['qty_requerida']) {
+                                                        $catEstado = 'info';
+                                                        $catEstadoTexto = 'Comprado';
+                                                    } else {
+                                                        $catEstado = 'danger';
+                                                        $catEstadoTexto = 'Faltante';
+                                                    }
+                                                }
+                                                ?>
+                                                <span class="badge bg-<?= $catEstado ?>"><?= $catEstadoTexto ?></span>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                    
+                    <!-- Totales Generales -->
+                    <div class="card bg-light mt-4">
+                        <div class="card-body">
+                            <h5 class="mb-3"><i class="bi bi-calculator"></i> Totales Generales del Proyecto</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Concepto</th>
+                                            <th>Requerido</th>
+                                            <th>Comprado</th>
+                                            <th>Disponible</th>
+                                            <th>Entregado</th>
+                                            <th>% Entregado</th>
+                                            <th>% En Almacén</th>
+                                            <th>% Faltante</th>
+                                            <th>Total Invertido</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="table-active">
+                                            <td><strong>TOTALES GENERALES</strong></td>
+                                            <td><strong><?= number_format($kpis['total_requerido'], 2) ?></strong></td>
+                                            <td><strong><?= number_format($kpis['total_comprado'], 2) ?></strong></td>
+                                            <td><strong><?= number_format($kpis['total_disponible'], 2) ?></strong></td>
+                                            <td><strong><?= number_format($kpis['total_entregado'], 2) ?></strong></td>
+                                            <td>
+                                                <?php $grandPctEntregado = $kpis['total_requerido'] > 0 ? round(($kpis['total_entregado'] / $kpis['total_requerido']) * 100, 1) : 0; ?>
+                                                <span class="badge bg-<?= $grandPctEntregado >= 100 ? 'success' : 'primary' ?> fs-6">
+                                                    <?= $grandPctEntregado ?>%
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <?php $grandPctDisponible = $kpis['total_requerido'] > 0 ? round(($kpis['total_disponible'] / $kpis['total_requerido']) * 100, 1) : 0; ?>
+                                                <span class="badge bg-warning fs-6"><?= $grandPctDisponible ?>%</span>
+                                            </td>
+                                            <td>
+                                                <?php $grandPctFaltante = max(0, 100 - $grandPctEntregado - $grandPctDisponible); ?>
+                                                <span class="badge bg-<?= $grandPctFaltante > 0 ? 'danger' : 'success' ?> fs-6">
+                                                    <?= $grandPctFaltante ?>%
+                                                </span>
+                                            </td>
+                                            <td><strong class="text-primary fs-5"><?= formatCurrency($kpis['total_invertido']) ?></strong></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 <?php endif; ?>
             </div>
