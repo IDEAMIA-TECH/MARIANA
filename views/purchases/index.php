@@ -56,7 +56,7 @@ $isAdmin = hasRole(ROLE_ADMIN);
                 <div class="card border-primary">
                     <div class="card-body text-center">
                         <h5 class="text-muted">Total de Compras</h5>
-                        <h2 class="text-primary"><?= number_format($totals['total_compras']) ?></h2>
+                        <h2 class="text-primary"><?= number_format($totals['total_compras'] ?? 0) ?></h2>
                         <small class="text-muted">Registros activos</small>
                     </div>
                 </div>
@@ -65,7 +65,7 @@ $isAdmin = hasRole(ROLE_ADMIN);
                 <div class="card border-success">
                     <div class="card-body text-center">
                         <h5 class="text-muted">Cantidad Total</h5>
-                        <h2 class="text-success"><?= number_format($totals['total_cantidad'], 2) ?></h2>
+                        <h2 class="text-success"><?= number_format((float)($totals['total_cantidad'] ?? 0), 2) ?></h2>
                         <small class="text-muted">Unidades compradas</small>
                     </div>
                 </div>
@@ -74,7 +74,7 @@ $isAdmin = hasRole(ROLE_ADMIN);
                 <div class="card border-info">
                     <div class="card-body text-center">
                         <h5 class="text-muted">Total Invertido</h5>
-                        <h2 class="text-info"><?= formatCurrency($totals['total_invertido']) ?></h2>
+                        <h2 class="text-info"><?= formatCurrency((float)($totals['total_invertido'] ?? 0)) ?></h2>
                         <small class="text-muted">Monto total</small>
                     </div>
                 </div>
@@ -130,7 +130,7 @@ $isAdmin = hasRole(ROLE_ADMIN);
                                             <strong><?= h($purchase['descripcion']) ?></strong><br>
                                             <small class="text-muted"><code><?= h($purchase['sku']) ?></code> | <?= h($purchase['unidad']) ?></small>
                                         </td>
-                                        <td><?= number_format($purchase['qty_comprada'], 2) ?> <?= h($purchase['unidad']) ?></td>
+                                        <td><?= number_format((float)($purchase['qty_comprada'] ?? 0), 2) ?> <?= h($purchase['unidad']) ?></td>
                                         <td><?= formatCurrency($purchase['costo_unitario'], $purchase['moneda']) ?></td>
                                         <td><strong><?= formatCurrency($purchase['total'], $purchase['moneda']) ?></strong></td>
                                         <td><?= h($purchase['proveedor'] ?? '-') ?></td>
@@ -184,7 +184,7 @@ $isAdmin = hasRole(ROLE_ADMIN);
                                                         <p><strong>Compra a cancelar:</strong></p>
                                                         <ul>
                                                             <li><strong>Material:</strong> <?= h($purchase['descripcion']) ?></li>
-                                                            <li><strong>Cantidad:</strong> <?= number_format($purchase['qty_comprada'], 2) ?> <?= h($purchase['unidad']) ?></li>
+                                                            <li><strong>Cantidad:</strong> <?= number_format((float)($purchase['qty_comprada'] ?? 0), 2) ?> <?= h($purchase['unidad']) ?></li>
                                                             <li><strong>Total:</strong> <?= formatCurrency($purchase['total'], $purchase['moneda']) ?></li>
                                                             <li><strong>Fecha:</strong> <?= formatDate($purchase['fecha_compra'], 'd/m/Y') ?></li>
                                                         </ul>

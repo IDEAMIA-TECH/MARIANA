@@ -230,15 +230,21 @@ class Purchase
      */
     public static function getTotals(int $projectId): array
     {
-        return Database::fetchOne(
+        $result = Database::fetchOne(
             "SELECT 
                 COUNT(*) as total_compras,
-                SUM(qty_comprada) as total_cantidad,
-                SUM(qty_comprada * costo_unitario) as total_invertido
+                COALESCE(SUM(qty_comprada), 0) as total_cantidad,
+                COALESCE(SUM(qty_comprada * costo_unitario), 0) as total_invertido
              FROM purchases
              WHERE project_id = ? AND cancelado = 0",
             [$projectId]
-        ) ?: ['total_compras' => 0, 'total_cantidad' => 0, 'total_invertido' => 0];
+        );
+        
+        return [
+            'total_compras' => (int)($result['total_compras'] ?? 0),
+            'total_cantidad' => (float)($result['total_cantidad'] ?? 0),
+            'total_invertido' => (float)($result['total_invertido'] ?? 0)
+        ];
     }
 }
 

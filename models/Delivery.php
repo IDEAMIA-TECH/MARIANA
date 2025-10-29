@@ -142,14 +142,19 @@ class Delivery
      */
     public static function getTotals(int $projectId): array
     {
-        return Database::fetchOne(
+        $result = Database::fetchOne(
             "SELECT 
                 COUNT(*) as total_entregas,
-                SUM(qty_entregada) as total_cantidad_entregada
+                COALESCE(SUM(qty_entregada), 0) as total_cantidad_entregada
              FROM deliveries
              WHERE project_id = ?",
             [$projectId]
-        ) ?: ['total_entregas' => 0, 'total_cantidad_entregada' => 0];
+        );
+        
+        return [
+            'total_entregas' => (int)($result['total_entregas'] ?? 0),
+            'total_cantidad_entregada' => (float)($result['total_cantidad_entregada'] ?? 0)
+        ];
     }
 
     /**

@@ -61,6 +61,7 @@ function getFlashMessage(): ?array
  */
 function formatCurrency(float $amount, string $currency = 'MXN'): string
 {
+    $amount = (float)($amount ?? 0);
     $symbols = [
         'MXN' => '$',
         'USD' => 'US$',
