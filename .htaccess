@@ -1,0 +1,35 @@
+# Configuración Apache para Control de Materiales
+
+RewriteEngine On
+RewriteBase /
+
+# Proteger archivos de configuración
+<FilesMatch "^(config|includes)">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+# Proteger archivos PHP de instalación en producción
+<FilesMatch "^(install|verify_tables|install_tables)\.php$">
+    Order deny,allow
+    Deny from all
+    # Permitir solo desde localhost (descomentar en desarrollo)
+    # Allow from 127.0.0.1
+</FilesMatch>
+
+# Redirigir a index.php si archivo no existe (para routing simple)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Seguridad adicional
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+</IfModule>
+
+# Comprimir respuestas
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript
+</IfModule>
+
