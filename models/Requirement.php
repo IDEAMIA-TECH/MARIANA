@@ -54,6 +54,18 @@ class Requirement
     }
 
     /**
+     * Buscar requerimiento por proyecto y material
+     */
+    public static function findByProjectAndMaterial(int $projectId, int $materialId): ?array
+    {
+        return Database::fetchOne(
+            "SELECT * FROM project_requirements 
+             WHERE project_id = ? AND material_id = ?",
+            [$projectId, $materialId]
+        );
+    }
+
+    /**
      * Crear requerimiento (con inicialización de inventory y cost_stats)
      */
     public static function create(array $data): ?int

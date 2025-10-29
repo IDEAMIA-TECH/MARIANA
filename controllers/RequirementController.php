@@ -42,6 +42,7 @@ class RequirementController
 
     /**
      * Procesar creación de requerimiento (AJAX o POST)
+     * Soporta múltiples materiales a la vez
      */
     public static function store(): void
     {
@@ -51,12 +52,10 @@ class RequirementController
         }
 
         $projectId = (int)($_POST['project_id'] ?? 0);
-        $materialId = (int)($_POST['material_id'] ?? 0);
-        $qty = floatval($_POST['qty_requerida'] ?? 0);
 
-        if (!$projectId || !$materialId || $qty <= 0) {
-            setFlashMessage('error', 'Datos inválidos');
-            redirect(base_url("requirements.php?project_id=$projectId"));
+        if (!$projectId) {
+            setFlashMessage('error', 'Proyecto no especificado');
+            redirect(base_url('projects.php'));
             return;
         }
 
@@ -75,26 +74,105 @@ class RequirementController
             return;
         }
 
-        // Verificar que no exista ya
-        if (Requirement::exists($projectId, $materialId)) {
-            setFlashMessage('error', 'Este material ya está en los requerimientos del proyecto');
-            redirect(base_url("requirements.php?project_id=$projectId"));
-            return;
-        }
+        // MODO 1: Múltiples materiales (array de material_ids con cantidades)
+        if (isset($_POST['materials']) && is_array($_POST['materials'])) {
+            $materials = $_POST['materials'];
+            $inserted = 0;
+            $updated = 0;
+            $errors = [];
 
-        $data = [
-            'project_id' => $projectId,
-            'material_id' => $materialId,
-            'qty_requerida' => $qty,
-            'comentarios' => trim($_POST['comentarios'] ?? '')
-        ];
+            foreach ($materials as $materialData) {
+                if (!is_array($materialData) || empty($materialData['material_id'])) {
+                    continue;
+                }
 
-        $requirementId = Requirement::create($data);
+                $materialId = (int)$materialData['material_id'];
+                $qty = floatval($materialData['qty'] ?? 0);
+                $comentarios = trim($materialData['comentarios'] ?? '');
 
-        if ($requirementId) {
-            setFlashMessage('success', 'Material agregado a los requerimientos exitosamente');
-        } else {
-            setFlashMessage('error', 'Error al agregar el requerimiento. Puede que el material ya esté en la lista.');
+                if ($qty <= 0) {
+                    continue; // Saltar materiales sin cantidad
+                }
+
+                // Verificar si ya existe
+                if (Requirement::exists($projectId, $materialId)) {
+                    // Actualizar cantidad si existe
+                    $existing = Requirement::findByProjectAndMaterial($projectId, $materialId);
+                    if ($existing) {
+                        Requirement::update($existing['id'], [
+                            'qty_requerida' => $qty,
+                            'comentarios' => $comentarios
+                        ]);
+                        $updated++;
+                    }
+                    continue;
+                }
+
+                // Crear nuevo
+                $data = [
+                    'project_id' => $projectId,
+                    'material_id' => $materialId,
+                    'qty_requerida' => $qty,
+                    'comentarios' => $comentarios
+                ];
+
+                if (Requirement::create($data)) {
+                    $inserted++;
+                } else {
+                    $errors[] = "Material ID: $materialId";
+                }
+            }
+
+            $message = '';
+            if ($inserted > 0) {
+                $message .= "$inserted material(es) agregado(s). ";
+            }
+            if ($updated > 0) {
+                $message .= "$updated material(es) actualizado(s). ";
+            }
+            if (!empty($errors)) {
+                $message .= "Errores: " . count($errors) . " material(es).";
+            }
+
+            if ($inserted > 0 || $updated > 0) {
+                setFlashMessage('success', trim($message));
+            } else {
+                setFlashMessage('info', 'No se agregaron materiales. Verifica que las cantidades sean válidas.');
+            }
+
+        } 
+        // MODO 2: Un solo material (compatibilidad hacia atrás)
+        else {
+            $materialId = (int)($_POST['material_id'] ?? 0);
+            $qty = floatval($_POST['qty_requerida'] ?? 0);
+
+            if (!$materialId || $qty <= 0) {
+                setFlashMessage('error', 'Datos inválidos');
+                redirect(base_url("requirements.php?project_id=$projectId"));
+                return;
+            }
+
+            // Verificar que no exista ya
+            if (Requirement::exists($projectId, $materialId)) {
+                setFlashMessage('error', 'Este material ya está en los requerimientos del proyecto');
+                redirect(base_url("requirements.php?project_id=$projectId"));
+                return;
+            }
+
+            $data = [
+                'project_id' => $projectId,
+                'material_id' => $materialId,
+                'qty_requerida' => $qty,
+                'comentarios' => trim($_POST['comentarios'] ?? '')
+            ];
+
+            $requirementId = Requirement::create($data);
+
+            if ($requirementId) {
+                setFlashMessage('success', 'Material agregado a los requerimientos exitosamente');
+            } else {
+                setFlashMessage('error', 'Error al agregar el requerimiento. Puede que el material ya esté en la lista.');
+            }
         }
 
         redirect(base_url("requirements.php?project_id=$projectId"));

@@ -61,48 +61,136 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
         </div>
 
         <?php if ($canEdit && !empty($materialesDisponibles)): ?>
-        <!-- Formulario para agregar material -->
+        <!-- Formulario para agregar materiales (múltiples a la vez) -->
         <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Agregar Material</h5>
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Agregar Materiales</h5>
+                <div>
+                    <button type="button" class="btn btn-sm btn-light" onclick="toggleView()" id="toggleBtn">
+                        <i class="bi bi-list-check"></i> Modo Múltiple
+                    </button>
+                </div>
             </div>
             <div class="card-body">
-                <form method="POST" action="<?= base_url('requirements.php') ?>">
-                    <input type="hidden" name="_action" value="store">
-                    <input type="hidden" name="project_id" value="<?= $projectId ?>">
-                    
-                    <div class="row">
-                        <div class="col-md-5 mb-3">
-                            <label for="material_id" class="form-label">Material <span class="text-danger">*</span></label>
-                            <select class="form-select" id="material_id" name="material_id" required>
-                                <option value="">Seleccionar material...</option>
-                                <?php foreach ($materialesDisponibles as $material): ?>
-                                    <option value="<?= $material['id'] ?>">
-                                        <?= h($material['sku']) ?> - <?= h($material['descripcion']) ?> (<?= h($material['unidad']) ?>)
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
+                <!-- Modo Simple (Un material a la vez) -->
+                <div id="single-mode">
+                    <form method="POST" action="<?= base_url('requirements.php') ?>">
+                        <input type="hidden" name="_action" value="store">
+                        <input type="hidden" name="project_id" value="<?= $projectId ?>">
                         
-                        <div class="col-md-3 mb-3">
-                            <label for="qty_requerida" class="form-label">Cantidad Requerida <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="qty_requerida" name="qty_requerida" 
-                                   required min="0.01" step="0.01" placeholder="0.00">
+                        <div class="row">
+                            <div class="col-md-5 mb-3">
+                                <label for="material_id" class="form-label">Material <span class="text-danger">*</span></label>
+                                <select class="form-select" id="material_id" name="material_id" required>
+                                    <option value="">Seleccionar material...</option>
+                                    <?php foreach ($materialesDisponibles as $material): ?>
+                                        <option value="<?= $material['id'] ?>">
+                                            <?= h($material['sku']) ?> - <?= h($material['descripcion']) ?> (<?= h($material['unidad']) ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="qty_requerida" class="form-label">Cantidad Requerida <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="qty_requerida" name="qty_requerida" 
+                                       required min="0.01" step="0.01" placeholder="0.00">
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="comentarios" class="form-label">Comentarios</label>
+                                <input type="text" class="form-control" id="comentarios" name="comentarios" 
+                                       placeholder="Opcional">
+                            </div>
+                            
+                            <div class="col-md-1 mb-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
                         </div>
+                    </form>
+                </div>
+
+                <!-- Modo Múltiple (Varios materiales a la vez) -->
+                <div id="multiple-mode" style="display: none;">
+                    <form method="POST" action="<?= base_url('requirements.php') ?>" id="multipleForm">
+                        <input type="hidden" name="_action" value="store">
+                        <input type="hidden" name="project_id" value="<?= $projectId ?>">
                         
-                        <div class="col-md-3 mb-3">
-                            <label for="comentarios" class="form-label">Comentarios</label>
-                            <input type="text" class="form-control" id="comentarios" name="comentarios" 
-                                   placeholder="Opcional">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label">Selecciona materiales y especifica cantidades:</label>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAll()">
+                                        <i class="bi bi-check-all"></i> Seleccionar Todos
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll()">
+                                        <i class="bi bi-x"></i> Deseleccionar
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-light sticky-top">
+                                        <tr>
+                                            <th style="width: 40px;">
+                                                <input type="checkbox" id="select-all-checkbox" onchange="toggleAllMaterials(this)">
+                                            </th>
+                                            <th>SKU</th>
+                                            <th>Descripción</th>
+                                            <th>Unidad</th>
+                                            <th style="width: 200px;">Cantidad</th>
+                                            <th style="width: 150px;">Categoría</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($materialesDisponibles as $idx => $material): ?>
+                                            <tr>
+                                                <td>
+                                                    <input type="checkbox" 
+                                                           class="material-checkbox" 
+                                                           name="materials[<?= $idx ?>][material_id]" 
+                                                           value="<?= $material['id'] ?>"
+                                                           onchange="toggleMaterialRow(this)">
+                                                </td>
+                                                <td><code><?= h($material['sku']) ?></code></td>
+                                                <td><?= h($material['descripcion']) ?></td>
+                                                <td><small class="text-muted"><?= h($material['unidad']) ?></small></td>
+                                                <td>
+                                                    <input type="number" 
+                                                           class="form-control form-control-sm qty-input" 
+                                                           name="materials[<?= $idx ?>][qty]" 
+                                                           min="0.01" 
+                                                           step="0.01" 
+                                                           placeholder="0.00"
+                                                           disabled
+                                                           style="display: none;">
+                                                </td>
+                                                <td><small class="text-muted"><?= h($material['categoria'] ?? 'General') ?></small></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="mt-3 d-flex justify-content-between">
+                                <div>
+                                    <span class="badge bg-info" id="selected-count">0 materiales seleccionados</span>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-secondary" onclick="toggleView()">
+                                        <i class="bi bi-arrow-left"></i> Modo Simple
+                                    </button>
+                                    <button type="submit" class="btn btn-primary" id="submit-multiple">
+                                        <i class="bi bi-check-circle"></i> Agregar Seleccionados
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <div class="col-md-1 mb-3 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="bi bi-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
         <?php endif; ?>
@@ -272,6 +360,96 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Alternar entre modo simple y múltiple
+        function toggleView() {
+            const singleMode = document.getElementById('single-mode');
+            const multipleMode = document.getElementById('multiple-mode');
+            const toggleBtn = document.getElementById('toggleBtn');
+            
+            if (singleMode.style.display === 'none') {
+                singleMode.style.display = 'block';
+                multipleMode.style.display = 'none';
+                toggleBtn.innerHTML = '<i class="bi bi-list-check"></i> Modo Múltiple';
+            } else {
+                singleMode.style.display = 'none';
+                multipleMode.style.display = 'block';
+                toggleBtn.innerHTML = '<i class="bi bi-plus"></i> Modo Simple';
+            }
+            updateSelectedCount();
+        }
+
+        // Habilitar/deshabilitar input de cantidad cuando se selecciona material
+        function toggleMaterialRow(checkbox) {
+            const row = checkbox.closest('tr');
+            const qtyInput = row.querySelector('.qty-input');
+            
+            if (checkbox.checked) {
+                qtyInput.style.display = 'block';
+                qtyInput.disabled = false;
+                qtyInput.focus();
+            } else {
+                qtyInput.style.display = 'none';
+                qtyInput.disabled = true;
+                qtyInput.value = '';
+            }
+            updateSelectedCount();
+        }
+
+        // Seleccionar/deseleccionar todos
+        function toggleAllMaterials(checkbox) {
+            const checkboxes = document.querySelectorAll('.material-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+                toggleMaterialRow(cb);
+            });
+        }
+
+        function selectAll() {
+            document.getElementById('select-all-checkbox').checked = true;
+            toggleAllMaterials(document.getElementById('select-all-checkbox'));
+        }
+
+        function deselectAll() {
+            document.getElementById('select-all-checkbox').checked = false;
+            toggleAllMaterials(document.getElementById('select-all-checkbox'));
+        }
+
+        // Actualizar contador de seleccionados
+        function updateSelectedCount() {
+            const selected = document.querySelectorAll('.material-checkbox:checked').length;
+            document.getElementById('selected-count').textContent = selected + ' material(es) seleccionado(s)';
+        }
+
+        // Validar formulario antes de enviar
+        document.getElementById('multipleForm')?.addEventListener('submit', function(e) {
+            const selected = document.querySelectorAll('.material-checkbox:checked');
+            
+            if (selected.length === 0) {
+                e.preventDefault();
+                alert('Por favor selecciona al menos un material');
+                return false;
+            }
+
+            let hasQuantity = false;
+            selected.forEach(checkbox => {
+                const row = checkbox.closest('tr');
+                const qtyInput = row.querySelector('.qty-input');
+                if (qtyInput && parseFloat(qtyInput.value) > 0) {
+                    hasQuantity = true;
+                }
+            });
+
+            if (!hasQuantity) {
+                e.preventDefault();
+                alert('Por favor especifica al menos una cantidad mayor a cero');
+                return false;
+            }
+        });
+
+        // Inicializar contador
+        updateSelectedCount();
+    </script>
 </body>
 </html>
 
