@@ -209,23 +209,63 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
                             <p>Usa el formulario arriba para agregar materiales</p>
                         <?php endif; ?>
                     </div>
-                <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Material</th>
-                                    <th>Requerido</th>
-                                    <th>Comprado</th>
-                                    <th>Disponible</th>
-                                    <th>Entregado</th>
-                                    <th>% Avance</th>
-                                    <th>Costo Promedio</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($requirements as $req): 
+                <?php else: 
+                    // Agrupar requerimientos por categoría
+                    $requirementsByCategory = [];
+                    $categoryTotals = [];
+                    
+                    foreach ($requirements as $req) {
+                        $categoria = $req['categoria'] ?? 'Sin Categoría';
+                        if (!isset($requirementsByCategory[$categoria])) {
+                            $requirementsByCategory[$categoria] = [];
+                            $categoryTotals[$categoria] = [
+                                'qty_requerida' => 0,
+                                'total_comprada' => 0,
+                                'qty_disponible' => 0,
+                                'qty_entregada' => 0,
+                                'total_costo' => 0
+                            ];
+                        }
+                        $requirementsByCategory[$categoria][] = $req;
+                        
+                        // Sumar totales por categoría
+                        $categoryTotals[$categoria]['qty_requerida'] += $req['qty_requerida'] ?? 0;
+                        $categoryTotals[$categoria]['total_comprada'] += $req['total_qty_comprada'] ?? 0;
+                        $categoryTotals[$categoria]['qty_disponible'] += $req['qty_disponible'] ?? 0;
+                        $categoryTotals[$categoria]['qty_entregada'] += $req['qty_entregada'] ?? 0;
+                        $categoryTotals[$categoria]['total_costo'] += $req['total_costo'] ?? 0;
+                    }
+                    
+                    // Ordenar categorías alfabéticamente
+                    ksort($requirementsByCategory);
+                ?>
+                    <?php foreach ($requirementsByCategory as $categoria => $categoryRequirements): 
+                        $categoryTotal = $categoryTotals[$categoria];
+                        $categoryCount = count($categoryRequirements);
+                    ?>
+                        <div class="mb-4">
+                            <h5 class="mb-3">
+                                <i class="bi bi-folder-fill text-primary"></i> 
+                                <?= h($categoria) ?> 
+                                <span class="badge bg-secondary"><?= $categoryCount ?> material(es)</span>
+                            </h5>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Material</th>
+                                            <th>Requerido</th>
+                                            <th>Comprado</th>
+                                            <th>Disponible</th>
+                                            <th>Entregado</th>
+                                            <th>% Avance</th>
+                                            <th>Costo Promedio</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($categoryRequirements as $req): 
                                     $pct_entregado = $req['qty_requerida'] > 0 
                                         ? round(($req['qty_entregada'] / $req['qty_requerida']) * 100, 1) 
                                         : 0;
@@ -350,9 +390,91 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
                                         </div>
                                     </div>
                                     <?php endif; ?>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                    <tfoot class="table-active fw-bold">
+                                        <tr>
+                                            <td><strong>Subtotal <?= h($categoria) ?>:</strong></td>
+                                            <td><?= number_format($categoryTotal['qty_requerida'], 2) ?></td>
+                                            <td><?= number_format($categoryTotal['total_comprada'], 2) ?></td>
+                                            <td><?= number_format($categoryTotal['qty_disponible'], 2) ?></td>
+                                            <td><?= number_format($categoryTotal['qty_entregada'], 2) ?></td>
+                                            <td>
+                                                <?php 
+                                                $pct_cat = $categoryTotal['qty_requerida'] > 0 
+                                                    ? round(($categoryTotal['qty_entregada'] / $categoryTotal['qty_requerida']) * 100, 1) 
+                                                    : 0;
+                                                ?>
+                                                <span class="badge bg-<?= $pct_cat >= 100 ? 'success' : ($pct_cat > 0 ? 'warning' : 'danger') ?>">
+                                                    <?= $pct_cat ?>%
+                                                </span>
+                                            </td>
+                                            <td><?= formatCurrency($categoryTotal['total_costo']) ?></td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                    
+                    <!-- Totales Generales -->
+                    <?php 
+                    $grandTotal = [
+                        'qty_requerida' => array_sum(array_column($categoryTotals, 'qty_requerida')),
+                        'total_comprada' => array_sum(array_column($categoryTotals, 'total_comprada')),
+                        'qty_disponible' => array_sum(array_column($categoryTotals, 'qty_disponible')),
+                        'qty_entregada' => array_sum(array_column($categoryTotals, 'qty_entregada')),
+                        'total_costo' => array_sum(array_column($categoryTotals, 'total_costo'))
+                    ];
+                    $grandPct = $grandTotal['qty_requerida'] > 0 
+                        ? round(($grandTotal['qty_entregada'] / $grandTotal['qty_requerida']) * 100, 1) 
+                        : 0;
+                    ?>
+                    <div class="card bg-light mt-4">
+                        <div class="card-body">
+                            <h5 class="mb-3"><i class="bi bi-calculator"></i> Totales Generales</h5>
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <div class="text-center">
+                                        <strong>Requerido</strong><br>
+                                        <span class="fs-5"><?= number_format($grandTotal['qty_requerida'], 2) ?></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="text-center">
+                                        <strong>Comprado</strong><br>
+                                        <span class="fs-5 text-info"><?= number_format($grandTotal['total_comprada'], 2) ?></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="text-center">
+                                        <strong>Disponible</strong><br>
+                                        <span class="fs-5 text-warning"><?= number_format($grandTotal['qty_disponible'], 2) ?></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="text-center">
+                                        <strong>Entregado</strong><br>
+                                        <span class="fs-5 text-success"><?= number_format($grandTotal['qty_entregada'], 2) ?></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="text-center">
+                                        <strong>% Avance</strong><br>
+                                        <span class="badge bg-<?= $grandPct >= 100 ? 'success' : ($grandPct > 0 ? 'warning' : 'danger') ?> fs-6">
+                                            <?= $grandPct ?>%
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="text-center">
+                                        <strong>Total Invertido</strong><br>
+                                        <span class="fs-5 text-primary"><?= formatCurrency($grandTotal['total_costo']) ?></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 <?php endif; ?>
             </div>
