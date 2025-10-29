@@ -1,0 +1,4 @@
+# Permitir acceso a logs solo desde localhost
+Order Deny,Allow
+Deny from all
+

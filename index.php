@@ -1,6 +1,49 @@
 <?php
 declare(strict_types=1);
 
+// ============================================
+// Configuración de Error Logging
+// ============================================
+// Crear directorio de logs si no existe
+$log_dir = __DIR__ . '/logs';
+if (!is_dir($log_dir)) {
+    @mkdir($log_dir, 0755, true);
+}
+
+// Configurar logging personalizado
+ini_set('log_errors', 1);
+ini_set('error_log', $log_dir . '/error.log');
+
+// En desarrollo: mostrar errores en pantalla
+// En producción: cambiar display_errors a 0
+$is_development = true; // Cambiar a false en producción
+ini_set('display_errors', $is_development ? 1 : 0);
+ini_set('display_startup_errors', $is_development ? 1 : 0);
+error_reporting($is_development ? E_ALL : E_ALL & ~E_DEPRECATED & ~E_STRICT);
+
+// Manejar errores fatales
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        $message = sprintf(
+            "FATAL ERROR: %s en %s línea %d",
+            $error['message'],
+            $error['file'],
+            $error['line']
+        );
+        error_log($message);
+        
+        if (ini_get('display_errors')) {
+            echo "<div style='background:#f8d7da;color:#721c24;padding:20px;margin:20px;border:1px solid #f5c6cb;border-radius:5px;'>";
+            echo "<h3>Error Fatal</h3>";
+            echo "<p><strong>" . htmlspecialchars($error['message']) . "</strong></p>";
+            echo "<p><small>Archivo: " . htmlspecialchars($error['file']) . "</small></p>";
+            echo "<p><small>Línea: " . $error['line'] . "</small></p>";
+            echo "</div>";
+        }
+    }
+});
+
 // Cargar configuración
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/config/config.php';
