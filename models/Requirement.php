@@ -14,7 +14,7 @@ class Requirement
         return Database::fetchAll(
             "SELECT pr.*, 
                     m.sku, m.descripcion, m.unidad, m.categoria,
-                    inv.qty_disponible, inv.qty_entregada,
+                    inv.qty_disponible, inv.qty_entregada, COALESCE(inv.qty_instalada, 0) as qty_instalada,
                     stats.total_qty_comprada, stats.total_costo, stats.costo_promedio_calc
              FROM project_requirements pr
              JOIN materials m ON m.id = pr.material_id

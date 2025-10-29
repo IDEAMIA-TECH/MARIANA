@@ -27,12 +27,14 @@ require_once __DIR__ . '/models/User.php';
 require_once __DIR__ . '/models/Project.php';
 require_once __DIR__ . '/models/Material.php';
 require_once __DIR__ . '/models/Requirement.php';
+require_once __DIR__ . '/models/Installation.php';
 
 // Cargar utilidades de autenticación
 require_once __DIR__ . '/includes/auth.php';
 
 // Cargar controladores
 require_once __DIR__ . '/controllers/RequirementController.php';
+require_once __DIR__ . '/controllers/InstallationController.php';
 
 // Requerir autenticación
 requireAuth();
@@ -54,6 +56,9 @@ switch ($action) {
         break;
     case 'delete':
         RequirementController::delete();
+        break;
+    case 'install':
+        InstallationController::store();
         break;
     case 'index':
     default:

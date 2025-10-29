@@ -223,6 +223,7 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
                                 'total_comprada' => 0,
                                 'qty_disponible' => 0,
                                 'qty_entregada' => 0,
+                                'qty_instalada' => 0,
                                 'total_costo' => 0
                             ];
                         }
@@ -233,6 +234,7 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
                         $categoryTotals[$categoria]['total_comprada'] += $req['total_qty_comprada'] ?? 0;
                         $categoryTotals[$categoria]['qty_disponible'] += $req['qty_disponible'] ?? 0;
                         $categoryTotals[$categoria]['qty_entregada'] += $req['qty_entregada'] ?? 0;
+                        $categoryTotals[$categoria]['qty_instalada'] += $req['qty_instalada'] ?? 0;
                         $categoryTotals[$categoria]['total_costo'] += $req['total_costo'] ?? 0;
                     }
                     
@@ -259,6 +261,7 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
                                             <th>Comprado</th>
                                             <th>Disponible</th>
                                             <th>Entregado</th>
+                                            <th>Instalado</th>
                                             <th>% Avance</th>
                                             <th>Costo Promedio</th>
                                             <th>Acciones</th>
@@ -303,6 +306,26 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
                                         <td><?= number_format($req['qty_disponible'] ?? 0, 2) ?> <?= h($req['unidad']) ?></td>
                                         <td><?= number_format($req['qty_entregada'] ?? 0, 2) ?> <?= h($req['unidad']) ?></td>
                                         <td>
+                                            <?php 
+                                            $qtyInstalada = (float)($req['qty_instalada'] ?? 0);
+                                            $qtyEntregadaParaInstalar = (float)$req['qty_entregada'] - $qtyInstalada;
+                                            $pctInstalado = $req['qty_entregada'] > 0 
+                                                ? round(($qtyInstalada / $req['qty_entregada']) * 100, 1) 
+                                                : 0;
+                                            ?>
+                                            <span class="badge bg-<?= $qtyInstalada > 0 ? ($pctInstalado >= 100 ? 'success' : 'info') : 'secondary' ?>">
+                                                <?= number_format($qtyInstalada, 2) ?> <?= h($req['unidad']) ?>
+                                            </span>
+                                            <?php if ($qtyInstalada > 0): ?>
+                                                <br><small class="text-muted"><?= $pctInstalado ?>% del entregado</small>
+                                            <?php endif; ?>
+                                            <?php if ($qtyEntregadaParaInstalar > 0 && hasAnyRole([ROLE_ADMIN, ROLE_PM])): ?>
+                                                <br><small class="text-primary">
+                                                    <i class="bi bi-info-circle"></i> Disponible para instalar: <?= number_format($qtyEntregadaParaInstalar, 2) ?>
+                                                </small>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
                                             <div class="progress progress-bar-custom mb-1">
                                                 <div class="progress-bar bg-<?= $color ?>" 
                                                      role="progressbar" 
@@ -326,23 +349,34 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
                                         </td>
                                         <td>
                                             <?php if ($canEdit): ?>
-                                                <div class="btn-group" role="group">
-                                                    <button type="button" 
-                                                            class="btn btn-sm btn-warning" 
-                                                            data-bs-toggle="modal" 
-                                                            data-bs-target="#editModal<?= $req['id'] ?>"
-                                                            title="Editar">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </button>
-                                                    <form method="POST" action="<?= base_url('requirements.php') ?>" 
-                                                          style="display:inline;" 
-                                                          onsubmit="return confirm('¿Eliminar este requerimiento?');">
-                                                        <input type="hidden" name="_action" value="delete">
-                                                        <input type="hidden" name="id" value="<?= $req['id'] ?>">
-                                                        <button type="submit" class="btn btn-sm btn-danger" title="Eliminar">
-                                                            <i class="bi bi-trash"></i>
+                                                <div class="btn-group-vertical" role="group" style="width: 100%;">
+                                                    <div class="btn-group" role="group">
+                                                        <button type="button" 
+                                                                class="btn btn-sm btn-warning" 
+                                                                data-bs-toggle="modal" 
+                                                                data-bs-target="#editModal<?= $req['id'] ?>"
+                                                                title="Editar">
+                                                            <i class="bi bi-pencil"></i>
                                                         </button>
-                                                    </form>
+                                                        <form method="POST" action="<?= base_url('requirements.php') ?>" 
+                                                              style="display:inline;" 
+                                                              onsubmit="return confirm('¿Eliminar este requerimiento?');">
+                                                            <input type="hidden" name="_action" value="delete">
+                                                            <input type="hidden" name="id" value="<?= $req['id'] ?>">
+                                                            <button type="submit" class="btn btn-sm btn-danger" title="Eliminar">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                    <?php if ($qtyEntregadaParaInstalar > 0): ?>
+                                                        <button type="button" 
+                                                                class="btn btn-sm btn-success mt-1" 
+                                                                data-bs-toggle="modal" 
+                                                                data-bs-target="#installModal<?= $req['id'] ?>"
+                                                                title="Marcar como Instalado">
+                                                            <i class="bi bi-check-circle"></i> Instalar
+                                                        </button>
+                                                    <?php endif; ?>
                                                 </div>
                                             <?php endif; ?>
                                         </td>
@@ -389,6 +423,89 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
                                             </div>
                                         </div>
                                     </div>
+                                    
+                                    <!-- Modal de Instalación -->
+                                    <?php if ($qtyEntregadaParaInstalar > 0): ?>
+                                    <div class="modal fade" id="installModal<?= $req['id'] ?>" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <form method="POST" action="<?= base_url('requirements.php') ?>">
+                                                    <input type="hidden" name="_action" value="install">
+                                                    <input type="hidden" name="project_id" value="<?= $projectId ?>">
+                                                    <input type="hidden" name="material_id" value="<?= $req['material_id'] ?>">
+                                                    
+                                                    <div class="modal-header bg-success text-white">
+                                                        <h5 class="modal-title">
+                                                            <i class="bi bi-check-circle"></i> Marcar como Instalado
+                                                        </h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p><strong><?= h($req['descripcion']) ?></strong></p>
+                                                        <p class="text-muted">
+                                                            <small>
+                                                                <strong>Entregado:</strong> <?= number_format($req['qty_entregada'], 2) ?> <?= h($req['unidad']) ?><br>
+                                                                <strong>Ya Instalado:</strong> <?= number_format($qtyInstalada, 2) ?> <?= h($req['unidad']) ?><br>
+                                                                <strong>Disponible para instalar:</strong> 
+                                                                <span class="text-primary fw-bold"><?= number_format($qtyEntregadaParaInstalar, 2) ?> <?= h($req['unidad']) ?></span>
+                                                            </small>
+                                                        </p>
+                                                        
+                                                        <div class="mb-3">
+                                                            <label for="qty_install_<?= $req['id'] ?>" class="form-label">
+                                                                Cantidad a Instalar <span class="text-danger">*</span>
+                                                            </label>
+                                                            <input type="number" 
+                                                                   class="form-control" 
+                                                                   id="qty_install_<?= $req['id'] ?>" 
+                                                                   name="qty_instalada" 
+                                                                   required 
+                                                                   min="0.01" 
+                                                                   step="0.01"
+                                                                   max="<?= $qtyEntregadaParaInstalar ?>"
+                                                                   value="<?= number_format($qtyEntregadaParaInstalar, 2, '.', '') ?>">
+                                                            <small class="text-muted">Máximo disponible: <?= number_format($qtyEntregadaParaInstalar, 2) ?> <?= h($req['unidad']) ?></small>
+                                                        </div>
+                                                        
+                                                        <div class="mb-3">
+                                                            <label for="fecha_install_<?= $req['id'] ?>" class="form-label">Fecha de Instalación</label>
+                                                            <input type="date" 
+                                                                   class="form-control" 
+                                                                   id="fecha_install_<?= $req['id'] ?>" 
+                                                                   name="fecha_instalacion" 
+                                                                   value="<?= date('Y-m-d') ?>"
+                                                                   required>
+                                                        </div>
+                                                        
+                                                        <div class="mb-3">
+                                                            <label for="ubicacion_<?= $req['id'] ?>" class="form-label">Ubicación (Opcional)</label>
+                                                            <input type="text" 
+                                                                   class="form-control" 
+                                                                   id="ubicacion_<?= $req['id'] ?>" 
+                                                                   name="ubicacion" 
+                                                                   placeholder="Ej: Planta Baja, Área A, etc.">
+                                                        </div>
+                                                        
+                                                        <div class="mb-3">
+                                                            <label for="comments_install_<?= $req['id'] ?>" class="form-label">Comentarios</label>
+                                                            <textarea class="form-control" 
+                                                                      id="comments_install_<?= $req['id'] ?>" 
+                                                                      name="comentarios" 
+                                                                      rows="2"
+                                                                      placeholder="Notas sobre la instalación..."></textarea>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                        <button type="submit" class="btn btn-success">
+                                                            <i class="bi bi-check-circle"></i> Registrar Instalación
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <?php endif; ?>
                                     <?php endif; ?>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -399,6 +516,11 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
                                             <td><?= number_format($categoryTotal['total_comprada'], 2) ?></td>
                                             <td><?= number_format($categoryTotal['qty_disponible'], 2) ?></td>
                                             <td><?= number_format($categoryTotal['qty_entregada'], 2) ?></td>
+                                            <td>
+                                                <span class="badge bg-<?= $categoryTotal['qty_instalada'] > 0 ? 'info' : 'secondary' ?>">
+                                                    <?= number_format($categoryTotal['qty_instalada'], 2) ?>
+                                                </span>
+                                            </td>
                                             <td>
                                                 <?php 
                                                 $pct_cat = $categoryTotal['qty_requerida'] > 0 
