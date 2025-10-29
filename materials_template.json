@@ -1,0 +1,31 @@
+[
+    {
+        "sku": "CAB-CAT6-305M",
+        "descripcion": "Cable UTP Cat 6 - 305m",
+        "unidad": "Rollo",
+        "categoria": "Cableado",
+        "activo": true
+    },
+    {
+        "sku": "CAB-FIB-50M",
+        "descripcion": "Cable Fibra Óptica 50m",
+        "unidad": "Rollo",
+        "categoria": "Cableado",
+        "activo": true
+    },
+    {
+        "sku": "AP-WIFI6-IND",
+        "descripcion": "Access Point WiFi 6 Industrial",
+        "unidad": "Pieza",
+        "categoria": "Equipos",
+        "activo": true
+    },
+    {
+        "sku": "SW-24PORT-POE",
+        "descripcion": "Switch 24 Puertos PoE",
+        "unidad": "Pieza",
+        "categoria": "Equipos",
+        "activo": true
+    }
+]
+
