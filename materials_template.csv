@@ -1,8 +1,114 @@
-sku,descripcion,unidad,categoria,activo
-CAB-CAT6-305M,Cable UTP Cat 6 - 305m,Rollo,Cableado,1
-CAB-FIB-50M,Cable Fibra Óptica 50m,Rollo,Cableado,1
-AP-WIFI6-IND,Access Point WiFi 6 Industrial,Pieza,Equipos,1
-SW-24PORT-POE,Switch 24 Puertos PoE,Pieza,Equipos,1
-PP-PATCH-24,Patch Panel 24 Puertos,Pieza,Cableado,1
-RJ45-CONN,Conector RJ45,Pieza,Conectores,1
-
+SKU,UNIDAD,DESCRIPCION,CATEGORIA
+PUR6AV04IG-G,Rollo,"Bobina de Cable UTP de 4 Pares, Vari-MaTriX, Cat6A, 23 AWG,CMR (Riser), Color Azul, 305m",Cableado
+PFL6X04BU-CEG,Rollo,"Bobina de Cable Blindado F/UTP de 4 Pares, Cat6A, Soporte de Aplicaciones 10GBase-T, LSZH (Libre de Gases Tóxicos), Color Azul, 305m",Cableado
+CPPL48WBLY,Pieza,"Panel de Parcheo Modular Mini-Com (Sin Conectores), Plano,Sin Blindaje, Con Etiqueta y Cubierta, de 48 puertos, 2UR",Cableado
+CJ6X88TGBU,Pieza,"Conector Jack RJ45 Estilo TG, Mini-Com, Categoría 6A, de 8 posiciones y 8 cables, Color Azul",Cableado
+UTP6AX3BU,Pieza,"Cable de Parcheo UTP, Cat6A, Diámetro Reducido (28 AWG),CM/LSZH, Color Azul, 8in (20.3cm)",Cableado
+UTP6AX7BU,Pieza,"Cable de Parcheo UTP, Cat6A, 24 AWG, CM, Color Azul, 7ft",Cableado
+CP48BLY,Pieza,"Panel de Parcheo Modular Mini-Com (Sin Conectores), Plano,Totalmente Blindado, de 48 puertos, 2UR ",Cableado
+CJS6X88TGBUY,Pieza,"Conector Jack RJ45 Blindado, Estilo TG, Mini-Com, Categoría 6A, de 8 posiciones y 8 cables, Color Azul ",Cableado
+STP28X1MBU,Pieza,"Patch Cord Cat6A, Diametro Reducido 28 AWG, BlindadoS/FTP, CM/LS0H, 1 m, Color Azul",Cableado
+STP28X2MBU,Pieza,"Patch Cord Cat6A, Diametro Reducido 28 AWG, BlindadoS/FTP, CM/LS0H, 2m, Color Azul",Cableado
+FOCRZ06Y,Metros,"Cable de Fibra Óptica de 6 hilos, Multimodo OM4 50/125 Optimizada, Interior/Exterior, Loose Tube 250um, No Conductiva(Dieléctrica), OFNR (Riser)
+VALIDAR DISTANCIA DE ENLACES",Fibra Optica
+FCE1U,Pieza,"Panel de Distribución de Fibra Óptica, Acepta 4 Placas FAP o FMP, Bandeja Deslizable e Inclinable Hacia Abajo, Hasta 96 Fibras, Color Negro, 1UR",Fibra Optica
+FOSMF,Pieza,"Charola de Empalme para Fibra Óptica, Para Protección de 24 Empalmes de Fusión o Mecánicos",Fibra Optica
+FO6CB,Pieza,"Kit Fan-Out de 6 Fibras, Para Convertir de 250 a 900 Micras, 1 Metro",Fibra Optica
+"FZ1BN1NNNSNM0
+01",Pieza,"Pigtail de Fibra Óptica LC Simplex, Multimodo OM4 50/125,900um, Color Aqua, 1 Metro",Fibra Optica
+FAP6WAQDLCZ,Pieza,"Placa Acopladora de Fibra Optica FAP, Con 6 Conectores LC Duplex (12 Fibras), Para Fibra Multimodo OM3/OM4, Color Aqua",Fibra Optica
+FAPB,Pieza,"Placa Ciega FAP, Para Reservar Espacio de Uso Futuro en Paneles de Fibra Óptica, Color Negro",Fibra Optica
+"FZ2ERLNLNSNM0
+02",Pieza,"Jumper de Fibra Optica Multimodo 50/125 OM4, LC-LC Duplex, OFNR (Riser), Color Aqua, 2 Metros
+VALIDAR OPCION DE 1 Y 3 METROS",Fibra Optica
+HT-60,Pieza,"Manga de Protección, para Empalmes de Fibra Óptica, Por Calor, de 60mm (2.36in)",Fibra Optica
+CAN-01,Metros,"Cable Cobre desnudo / 4 AWG / Semiduro 7 Hilos 
+CONFIRMAR MEDIDA ",CANALIZACIONES
+CAN-02,Metros,"Cable de Cobre Desnudo Semiduro 7 Hilos, Cal. 6 AWG
+CONFIRMAR MEDIDA",CANALIZACIONES
+CAN-03,Pieza,Registros metalico tipo himel 30X30X20,CANALIZACIONES
+CAN-04,tmo,Escalerilla tipo malla de 100mm de ancho y 66mm de peralte,CANALIZACIONES
+CAN-05,tmo,Escalerilla tipo malla de 200mm de ancho y 66mm de peralte,CANALIZACIONES
+CAN-06,pza,Clip recto automático,CANALIZACIONES
+CAN-07,kit,Kit 1 para unión de charolas,CANALIZACIONES
+CAN-08,kit,Kit 3 para unión de charolas,CANALIZACIONES
+CAN-09,pza,Clip para unicanal,CANALIZACIONES
+CAN-10,pza,Suspensión conjunto para escalerilla de 100mm,CANALIZACIONES
+CAN-11,pza,Placa salida a tubo,CANALIZACIONES
+CAN-12,pza,"Abrazadera tipo U de 3/4""",CANALIZACIONES
+CAN-13,pza,"Abrazadera tipo U de 1""",CANALIZACIONES
+CAN-14,pza,"Abrazadera tipo U de 1 1/4""",CANALIZACIONES
+CAN-15,pza,"Abrazadera tipo U de 1 1/2""",CANALIZACIONES
+CAN-16,pza,"Tuerca hexagonal galvanizada de 1/4""",CANALIZACIONES
+CAN-17,pza,"Rondana plana galvanizada de 1/4""",CANALIZACIONES
+CAN-18,tmo,Perfil unicanal 4x4,CANALIZACIONES
+CAN-19,tmo,"Varilla roscada de 3/8""",CANALIZACIONES
+CAN-20,pza,"Mordaza fija barra de 3/4"" X 3/8""",CANALIZACIONES
+CAN-21,pza,"Tuerca hexagonal galvanizada de 3/8""",CANALIZACIONES
+CAN-22,pza,"Rondana plana galvanizada de 3/8""",CANALIZACIONES
+CAN-23,tmo,"Tubo conduit PDG de 1""",CANALIZACIONES
+CAN-24,tmo,"Tubo conduit PDG de 1 1/2""",CANALIZACIONES
+CAN-25,tmo,"Tubo conduit PDG de 2""",CANALIZACIONES
+CAN-26,tmo,"Codo conduit PDG de 2""",CANALIZACIONES
+CAN-27,pza,"Cóndulet FS de 1""",CANALIZACIONES
+CAN-28,pza,"Caja cuadrada de 3/4"" ",CANALIZACIONES
+CAN-29,pza,"Sobretapa 3/4""",CANALIZACIONES
+CAN-30,pza,"Caja cuadrada de 1"" ",CANALIZACIONES
+CAN-31,pza,"Sobretapa 1""",CANALIZACIONES
+CAN-32,pza,"Caja cuadrada de 1 1/4"" ",CANALIZACIONES
+CAN-33,pza,"tapa 1 1/4""",CANALIZACIONES
+CAN-34,pza,"Caja cuadrada de 1 1/2"" ",CANALIZACIONES
+CAN-35,pza,"Tapa 1 1/2""",CANALIZACIONES
+CAN-36,pza,"Cople PDG de 3/4""",CANALIZACIONES
+CAN-37,pza,"Cople PDG de 1""",CANALIZACIONES
+CAN-38,pza,"Cople PDG de 1 1/4""",CANALIZACIONES
+CAN-39,pza,"Cople PDG de 1 1/2""",CANALIZACIONES
+CAN-40,pza,"Cople PDG de 2""",CANALIZACIONES
+CAN-41,pza,"Conector PDG de 3/4""",CANALIZACIONES
+CAN-42,pza,"Conector PDG de 1""",CANALIZACIONES
+CAN-43,pza,"Conector PDG de 1 1/4""",CANALIZACIONES
+CAN-44,pza,"Conector PDG de 1 1/2""",CANALIZACIONES
+CAN-45,pza,"Conector PDG de 2""",CANALIZACIONES
+CAN-46,pza,"Cople PGG de 2""",CANALIZACIONES
+CAN-47,pza,"Cople PGG de 1""",CANALIZACIONES
+CAN-48,pza,"Conector PVC de 2""",CANALIZACIONES
+CAN-49,pza,"Conector PVC de 1""",CANALIZACIONES
+CAN-50,pza,"Abrazadera clip de 3/4""",CANALIZACIONES
+CAN-51,pza,"Abrazadera clip de 1""",CANALIZACIONES
+CAN-52,pza,"Abrazadera clip de 1 1/4""",CANALIZACIONES
+CAN-53,pza,"Abrazadera clip de 1 1/2""",CANALIZACIONES
+CAN-54,pza,"Pija cabeza philips 8x3/4""",CANALIZACIONES
+CAN-55,pza,Pijas y taquetes,CANALIZACIONES
+CAN-56,Tmo,"Tubo Conduit PVC 1""",CANALIZACIONES
+CAN-57,Pieza,"Conector conduit PVC 1""",CANALIZACIONES
+CAN-58,Pieza,"Coples 3/4"" pared gruesa",CANALIZACIONES
+CAN-59,Tmo,"Tubo conduit PVC 3/4""",CANALIZACIONES
+CAN-60,tmo,"Tubo conduit PDG de 3/4""",CANALIZACIONES
+CAN-61,tmo,"Tubo conduit PDG de 1 1/4""",CANALIZACIONES
+CAN-62,pza,"Cóndulet FS de 3/4""",CANALIZACIONES
+CAN-63,pza,Taquetes rojos ,CANALIZACIONES
+CAN-64,pza,pijabrocas tipo tachuela cabeza de cruz ,CANALIZACIONES
+CAN-65,pza,pijas negras para perfil de tablaroca,CANALIZACIONES
+CAN-66,pza,"Pija punta de broca 1/4""x3/4""",CANALIZACIONES
+CAN-67,Pieza,"Conector conduit PVC 3/4""",CANALIZACIONES
+CAN-68,Pieza,"Abrazadera para unicanal 1 1/4""",CANALIZACIONES
+CAN-69,Pieza,Cemento PVC,CANALIZACIONES
+CAN-70,Pieza,"Abrazadera para unicanal 1 1/2""",CANALIZACIONES
+CAN-71,Tmo,Ducto cuadrado de 10*10,CANALIZACIONES
+CAN-72,Pieza,Tapas finales para ducto cuadrado de 10*10,CANALIZACIONES
+CAN-73,Tmo,Unicanal 4*2,CANALIZACIONES
+CAN-74,Tmo,Perfil tablaroca vertical,CANALIZACIONES
+CAN-75,Pieza,pijabrocas tipo tachuela cabeza de cruz ,CANALIZACIONES
+CAN-76,Pieza,pijas negras para perfil de tablaroca,CANALIZACIONES
+CAN-77,Pieza,"taquetes expansivos ,rosca interna, para varilla de 3/8""",CANALIZACIONES
+CAN-78,Pieza,"brocas guía para metal de 1/4""",CANALIZACIONES
+CAN-79,Pieza,"Registro galvanizado 2""",CANALIZACIONES
+CAN-80,Pieza,"Registros raco de 3/4""",CANALIZACIONES
+CAN-81,Pieza,"Registros raco de 1""",CANALIZACIONES
+CAN-82,Pieza,"Abrazadera para unicanal de 3/4""",CANALIZACIONES
+CAN-83,Pieza,"Abrazadera para unicanal de 1"" ",CANALIZACIONES
+CAN-84,Pieza,DUCTO CUADRADO 63.5X63.5mm 1564mm,CANALIZACIONES
+CAN-85,Pieza,REDUCTOR DUCTO 101.6X101.6 mm a 63.5 mm,CANALIZACIONES
+CAN-86,Pieza,PLACA CIERRE DUCTO 63.5X63.5mm,CANALIZACIONES
+CAN-87,Pieza,CONECTOR DUCTO 63.5X63.5mm (NIPLE),CANALIZACIONES
+CAN-88,Pieza,CODO DUCTO 90º 63.5X63.5mm,CANALIZACIONES

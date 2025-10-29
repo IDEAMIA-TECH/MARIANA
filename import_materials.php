@@ -108,13 +108,25 @@ function importFromCSV(string $csvFile): array
         $headerMap[strtolower(trim($header))] = $i;
     }
 
-    // Validar headers requeridos
+    // Validar headers requeridos (case insensitive)
     $required = ['sku', 'descripcion'];
-    foreach ($required as $req) {
+    $requiredLower = array_map('strtolower', $required);
+    
+    foreach ($requiredLower as $req) {
         if (!isset($headerMap[$req])) {
             throw new Exception("Header requerido no encontrado: $req. Headers disponibles: " . implode(', ', array_keys($headerMap)));
         }
     }
+    
+    // Normalizar nombres de unidades comunes
+    $unidadMap = [
+        'pza' => 'Pieza',
+        'tmo' => 'Metros',
+        'Metros' => 'Metros',
+        'Pieza' => 'Pieza',
+        'Rollo' => 'Rollo',
+        'kit' => 'Kit'
+    ];
 
     // Leer datos
     $line = 2; // Empezar desde línea 2 (después del header)
@@ -123,10 +135,17 @@ function importFromCSV(string $csvFile): array
             continue; // Saltar filas incompletas
         }
 
+        $sku = trim($row[$headerMap['sku']] ?? '');
+        $descripcion = trim($row[$headerMap['descripcion']] ?? '');
+        $unidadRaw = trim($row[$headerMap['unidad'] ?? 'unidad'] ?? 'Pieza');
+        
+        // Normalizar unidad
+        $unidadNormalized = $unidadMap[strtolower($unidadRaw)] ?? ucfirst(strtolower($unidadRaw));
+        
         $material = [
-            'sku' => trim($row[$headerMap['sku']] ?? ''),
-            'descripcion' => trim($row[$headerMap['descripcion']] ?? ''),
-            'unidad' => trim($row[$headerMap['unidad'] ?? 'unidad'] ?? 'Pieza'),
+            'sku' => $sku,
+            'descripcion' => $descripcion,
+            'unidad' => $unidadNormalized,
             'categoria' => trim($row[$headerMap['categoria'] ?? 'categoria'] ?? 'General'),
             'activo' => isset($headerMap['activo']) ? ($row[$headerMap['activo']] ?? '1') !== '0' : true
         ];
