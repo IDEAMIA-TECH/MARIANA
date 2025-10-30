@@ -50,7 +50,7 @@ $projectId = $project['id'];
                             <div class="mb-3">
                                 <label class="form-label">Productos de la compra <span class="text-danger">*</span></label>
                                 <div id="items-container">
-                                    <div class="purchase-item row g-2 align-items-end mb-2" data-index="0">
+                                    <div class="purchase-item row g-2 mb-2" data-index="0">
                                         <div class="col-md-5">
                                             <label class="form-label">Material</label>
                                             <select class="form-select material-select" name="material_id[]" required>
