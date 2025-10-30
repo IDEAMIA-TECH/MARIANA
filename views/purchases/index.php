@@ -190,7 +190,13 @@ $isAdmin = hasRole(ROLE_ADMIN);
                                                 <span class="badge bg-success">Activa</span>
                                             <?php endif; ?>
                                         </td>
-                                        <td>
+                                        <td class="d-flex gap-1">
+                                            <button type="button" class="btn btn-sm btn-info" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#detailModal<?= $purchase['id'] ?>"
+                                                    title="Ver detalles">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
                                             <?php if ($isAdmin && !$purchase['cancelado']): ?>
                                                 <button type="button" class="btn btn-sm btn-danger" 
                                                         data-bs-toggle="modal" 
@@ -201,6 +207,65 @@ $isAdmin = hasRole(ROLE_ADMIN);
                                             <?php endif; ?>
                                         </td>
                                     </tr>
+
+                                    <!-- Modal de Detalles -->
+                                    <div class="modal fade" id="detailModal<?= $purchase['id'] ?>" tabindex="-1">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-info text-white">
+                                                    <h5 class="modal-title">Detalles de la Compra</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <div class="card h-100">
+                                                                <div class="card-body">
+                                                                    <h6 class="text-muted">Material</h6>
+                                                                    <p class="mb-1"><strong><?= h($purchase['descripcion']) ?></strong></p>
+                                                                    <small class="text-muted"><code><?= h($purchase['sku']) ?></code> | <?= h($purchase['unidad']) ?></small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="card h-100">
+                                                                <div class="card-body">
+                                                                    <h6 class="text-muted">Compra</h6>
+                                                                    <p class="mb-1">Fecha: <strong><?= formatDate($purchase['fecha_compra'], 'd/m/Y') ?></strong></p>
+                                                                    <p class="mb-1">Cantidad: <strong><?= number_format((float)($purchase['qty_comprada'] ?? 0), 2) ?> <?= h($purchase['unidad']) ?></strong></p>
+                                                                    <p class="mb-1">Costo Unitario: <strong><?= formatCurrency($purchase['costo_unitario'], $purchase['moneda']) ?></strong></p>
+                                                                    <p class="mb-0">Total: <strong><?= formatCurrency($purchase['total'], $purchase['moneda']) ?></strong></p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="card h-100">
+                                                                <div class="card-body">
+                                                                    <h6 class="text-muted">Proveedor</h6>
+                                                                    <p class="mb-1">Nombre: <strong><?= h($purchase['proveedor'] ?? '-') ?></strong></p>
+                                                                    <p class="mb-0">Factura: <strong><?= h($purchase['numero_factura'] ?? '-') ?></strong></p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="card h-100">
+                                                                <div class="card-body">
+                                                                    <h6 class="text-muted">Registro</h6>
+                                                                    <p class="mb-1">Comprado por: <strong><?= h($purchase['comprador_nombre'] ?? 'N/A') ?></strong></p>
+                                                                    <?php if (!empty($purchase['created_at'])): ?>
+                                                                        <p class="mb-0">Creado: <strong><?= h($purchase['created_at']) ?></strong></p>
+                                                                    <?php endif; ?>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <!-- Modal de Cancelación -->
                                     <?php if ($isAdmin && !$purchase['cancelado']): ?>
