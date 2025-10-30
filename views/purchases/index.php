@@ -50,6 +50,28 @@ $isAdmin = hasRole(ROLE_ADMIN);
             </div>
         </div>
 
+        <?php
+        // Totales en USD y MXN combinados (conversión USD->MXN por tipo_cambio por orden)
+        $totalUSD = 0.0;
+        $totalGlobalMXN = 0.0;
+        foreach ($purchases as $p) {
+            if (!empty($p['cancelado'])) { continue; }
+            $qty = (float)($p['qty_comprada'] ?? 0);
+            $cost = (float)($p['costo_unitario'] ?? 0);
+            $sub = $qty * $cost;
+            $currency = $p['moneda'] ?? 'MXN';
+            if ($currency === 'USD') {
+                $totalUSD += $sub;
+                $tc = (float)($p['tipo_cambio'] ?? 0);
+                if ($tc > 0) {
+                    $totalGlobalMXN += $sub * $tc;
+                }
+            } elseif ($currency === 'MXN') {
+                $totalGlobalMXN += $sub;
+            }
+        }
+        ?>
+
         <!-- Resumen de Totales -->
         <div class="row mb-4">
             <div class="col-md-4">
@@ -76,6 +98,28 @@ $isAdmin = hasRole(ROLE_ADMIN);
                         <h5 class="text-muted">Total Invertido</h5>
                         <h2 class="text-info"><?= formatCurrency((float)($totals['total_invertido'] ?? 0)) ?></h2>
                         <small class="text-muted">Monto total</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Totales por Moneda y MXN Global -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card border-primary h-100">
+                    <div class="card-body text-center">
+                        <h5 class="text-muted">Total compras en USD</h5>
+                        <h2 class="text-primary"><?= formatCurrency($totalUSD, 'USD') ?></h2>
+                        <small class="text-muted">Suma de compras activas en USD</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-success h-100">
+                    <div class="card-body text-center">
+                        <h5 class="text-muted">Total global en MXN</h5>
+                        <h2 class="text-success"><?= formatCurrency($totalGlobalMXN, 'MXN') ?></h2>
+                        <small class="text-muted">MXN + USD convertidos con el tipo de cambio guardado</small>
                     </div>
                 </div>
             </div>
