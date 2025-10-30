@@ -95,6 +95,20 @@ $canExport = hasAnyRole([ROLE_ADMIN, ROLE_PM]);
                 <h4 class="mb-0"><i class="bi bi-graph-up"></i> Resumen Ejecutivo</h4>
             </div>
             <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="text-center p-3 bg-light rounded border border-primary">
+                            <h4 class="text-primary mb-1"><?= formatCurrency($totalUSD ?? 0, 'USD') ?></h4>
+                            <p class="mb-0"><strong>Total compras en USD</strong></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-center p-3 bg-light rounded border border-success">
+                            <h4 class="text-success mb-1"><?= formatCurrency($totalGlobalMXN ?? 0, 'MXN') ?></h4>
+                            <p class="mb-0"><strong>Total global en MXN (MXN + USD convertidos)</strong></p>
+                        </div>
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-md-3">
                         <div class="text-center p-3 bg-light rounded">

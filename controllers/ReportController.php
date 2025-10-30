@@ -39,6 +39,25 @@ class ReportController
         $summary = Report::getExecutiveSummary($projectId);
         $costReport = Report::getCostReport($projectId);
 
+        // Totales USD y MXN global (MXN + USD*TC) para tarjetas de reporte
+        $purchases = Database::fetchAll(
+            "SELECT moneda, qty_comprada, costo_unitario, tipo_cambio, cancelado FROM purchases WHERE project_id = ?",
+            [$projectId]
+        );
+        $totalUSD = 0.0;
+        $totalGlobalMXN = 0.0;
+        foreach ($purchases as $p) {
+            if (!empty($p['cancelado'])) { continue; }
+            $sub = (float)$p['qty_comprada'] * (float)$p['costo_unitario'];
+            if (($p['moneda'] ?? 'MXN') === 'USD') {
+                $totalUSD += $sub;
+                $tc = (float)($p['tipo_cambio'] ?? 0);
+                if ($tc > 0) { $totalGlobalMXN += $sub * $tc; }
+            } elseif (($p['moneda'] ?? 'MXN') === 'MXN') {
+                $totalGlobalMXN += $sub;
+            }
+        }
+
         require_once __DIR__ . '/../views/reports/project.php';
     }
 
