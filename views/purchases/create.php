@@ -49,6 +49,27 @@ $projectId = $project['id'];
                             </ul>
                         </div>
 
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <div class="card border-primary h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title mb-2">Total compras en USD</h6>
+                                        <p class="display-6 mb-0 text-primary" id="top-total-usd">US$0.00</p>
+                                        <small class="text-muted">Suma de todos los ítems capturados en USD</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-success h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title mb-2">Total global en MXN</h6>
+                                        <p class="display-6 mb-0 text-success" id="top-total-mxn">$0.00</p>
+                                        <small class="text-muted">Incluye MXN + USD convertidos con su tipo de cambio</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <form method="POST" action="<?= base_url('purchases.php') ?>" id="purchaseForm">
                             <input type="hidden" name="_action" value="store">
                             <input type="hidden" name="project_id" value="<?= $projectId ?>">
@@ -202,6 +223,11 @@ $projectId = $project['id'];
 
             document.getElementById('summary-total-usd').textContent = 'US$' + totalUSD.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             document.getElementById('summary-total-mxn').textContent = '$' + totalMXN.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            // actualizar tarjetas superiores
+            const topUsd = document.getElementById('top-total-usd');
+            const topMxn = document.getElementById('top-total-mxn');
+            if (topUsd) topUsd.textContent = 'US$' + totalUSD.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (topMxn) topMxn.textContent = '$' + totalMXN.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         function wireRowEvents(row) {
