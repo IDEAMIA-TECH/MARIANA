@@ -227,6 +227,90 @@ class Purchase
     }
 
     /**
+     * Actualiza campos permitidos y recalcula inventario y costos del material.
+     * No permite cambiar el material.
+     */
+    public static function updateFields(int $id, array $fields, array $original): bool
+    {
+        try {
+            $pdo = Database::getConnection();
+            $pdo->beginTransaction();
+
+            $allowed = ['qty_comprada','costo_unitario','moneda','tipo_cambio','proveedor','numero_factura','fecha_compra'];
+            $setParts = [];
+            $params = [];
+            foreach ($allowed as $k) {
+                if (array_key_exists($k, $fields)) {
+                    $setParts[] = "$k = ?";
+                    $params[] = $fields[$k];
+                }
+            }
+            if (empty($setParts)) {
+                $pdo->rollBack();
+                return false;
+            }
+
+            $params[] = $id;
+            Database::query("UPDATE purchases SET " . implode(', ', $setParts) . " WHERE id = ?", $params);
+
+            // Recalcular inventario para este material en este proyecto
+            $projectId = (int)$original['project_id'];
+            $materialId = (int)$original['material_id'];
+
+            $totals = Database::fetchOne(
+                "SELECT COALESCE(SUM(qty_comprada),0) as qty, COALESCE(SUM(qty_comprada * costo_unitario),0) as costo
+                 FROM purchases WHERE project_id = ? AND material_id = ? AND cancelado = 0",
+                [$projectId, $materialId]
+            );
+
+            $totalQty = (float)($totals['qty'] ?? 0);
+            $totalCosto = (float)($totals['costo'] ?? 0);
+            $avg = $totalQty > 0 ? ($totalCosto / $totalQty) : 0;
+
+            // Actualizar material_cost_stats
+            $exists = Database::fetchOne(
+                "SELECT 1 FROM material_cost_stats WHERE project_id = ? AND material_id = ?",
+                [$projectId, $materialId]
+            );
+            if ($exists) {
+                Database::query(
+                    "UPDATE material_cost_stats SET total_qty_comprada = ?, total_costo = ?, costo_promedio_calc = ?, last_update = NOW()
+                     WHERE project_id = ? AND material_id = ?",
+                    [$totalQty, $totalCosto, $avg, $projectId, $materialId]
+                );
+            } else {
+                Database::query(
+                    "INSERT INTO material_cost_stats (project_id, material_id, total_qty_comprada, total_costo, costo_promedio_calc)
+                     VALUES (?, ?, ?, ?, ?)",
+                    [$projectId, $materialId, $totalQty, $totalCosto, $avg]
+                );
+            }
+
+            // Ajustar inventario disponible: establecer a suma actual (manteniendo entregada)
+            $inv = Database::fetchOne(
+                "SELECT qty_entregada FROM inventory WHERE project_id = ? AND material_id = ?",
+                [$projectId, $materialId]
+            );
+            $qtyEntregada = (float)($inv['qty_entregada'] ?? 0);
+            Database::query(
+                "INSERT INTO inventory (project_id, material_id, qty_disponible, qty_entregada)
+                 VALUES (?, ?, ?, ?)
+                 ON DUPLICATE KEY UPDATE qty_disponible = VALUES(qty_disponible), last_update = NOW()",
+                [$projectId, $materialId, max(0, $totalQty - $qtyEntregada) + $qtyEntregada - $qtyEntregada, $qtyEntregada]
+            );
+
+            $pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            if (isset($pdo) && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log('Error actualizando compra: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Obtener totales de compras por proyecto
      */
     public static function getTotals(int $projectId): array

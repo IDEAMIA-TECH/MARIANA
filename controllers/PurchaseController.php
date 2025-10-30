@@ -227,5 +227,100 @@ class PurchaseController
 
         redirect(base_url("purchases.php?project_id={$purchase['project_id']}"));
     }
+
+    /**
+     * Mostrar formulario de edición de compra
+     */
+    public static function edit(): void
+    {
+        $projectId = (int)($_GET['project_id'] ?? 0);
+        $id = (int)($_GET['id'] ?? 0);
+        if (!$projectId || !$id) {
+            setFlashMessage('error', 'Solicitud inválida');
+            redirect(base_url('projects.php'));
+            return;
+        }
+
+        if (!hasAnyRole([ROLE_ADMIN, ROLE_PM])) {
+            setFlashMessage('error', 'No tienes permisos para editar compras');
+            redirect(base_url('projects.php'));
+            return;
+        }
+
+        $project = Project::findById($projectId);
+        $purchase = Purchase::findById($id);
+        if (!$project || !$purchase || (int)$purchase['project_id'] !== $projectId) {
+            setFlashMessage('error', 'Compra no encontrada');
+            redirect(base_url("purchases.php?project_id=$projectId"));
+            return;
+        }
+
+        require_once __DIR__ . '/../views/purchases/edit.php';
+    }
+
+    /**
+     * Actualizar compra existente (sin cambiar material)
+     */
+    public static function update(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(base_url('projects.php'));
+            return;
+        }
+
+        if (!hasAnyRole([ROLE_ADMIN, ROLE_PM])) {
+            setFlashMessage('error', 'No tienes permisos para editar compras');
+            redirect(base_url('projects.php'));
+            return;
+        }
+
+        $projectId = (int)($_POST['project_id'] ?? 0);
+        $id = (int)($_POST['id'] ?? 0);
+        $qty = (float)($_POST['qty_comprada'] ?? 0);
+        $costo = (float)($_POST['costo_unitario'] ?? 0);
+        $moneda = $_POST['moneda'] ?? 'MXN';
+        $tc = isset($_POST['tipo_cambio']) ? (float)$_POST['tipo_cambio'] : 0.0;
+        $proveedor = trim($_POST['proveedor'] ?? '');
+        $factura = trim($_POST['numero_factura'] ?? '');
+        $fecha = $_POST['fecha_compra'] ?? date('Y-m-d');
+
+        if (!$projectId || !$id) {
+            setFlashMessage('error', 'Solicitud inválida');
+            redirect(base_url('projects.php'));
+            return;
+        }
+        if ($qty <= 0 || $costo < 0) {
+            setFlashMessage('error', 'Cantidad y costo deben ser válidos');
+            redirect(base_url("purchases.php?project_id=$projectId&action=edit&id=$id"));
+            return;
+        }
+
+        // Obtener compra original
+        $original = Purchase::findById($id);
+        if (!$original) {
+            setFlashMessage('error', 'Compra no encontrada');
+            redirect(base_url("purchases.php?project_id=$projectId"));
+            return;
+        }
+
+        // Delegar actualización al modelo
+        $ok = Purchase::updateFields($id, [
+            'qty_comprada' => $qty,
+            'costo_unitario' => $costo,
+            'moneda' => $moneda,
+            'tipo_cambio' => ($moneda === 'USD' && $tc > 0) ? $tc : null,
+            'proveedor' => $proveedor,
+            'numero_factura' => $factura,
+            'fecha_compra' => $fecha,
+        ], $original);
+
+        if ($ok) {
+            setFlashMessage('success', 'Compra actualizada correctamente. Inventario y costos recalculados.');
+            redirect(base_url("purchases.php?project_id=$projectId"));
+        } else {
+            setFlashMessage('error', 'No se pudo actualizar la compra');
+            redirect(base_url("purchases.php?project_id=$projectId&action=edit&id=$id"));
+        }
+    }
 }
 

@@ -53,6 +53,12 @@ switch ($action) {
     case 'store':
         PurchaseController::store();
         break;
+    case 'edit':
+        PurchaseController::edit();
+        break;
+    case 'update':
+        PurchaseController::update();
+        break;
     case 'cancel':
         PurchaseController::cancel();
         break;

@@ -191,6 +191,10 @@ $isAdmin = hasRole(ROLE_ADMIN);
                                             <?php endif; ?>
                                         </td>
                                         <td class="d-flex gap-1">
+                                            <a href="<?= base_url("purchases.php?project_id=$projectId&action=edit&id={$purchase['id']}") ?>" 
+                                               class="btn btn-sm btn-warning" title="Editar">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
                                             <button type="button" class="btn btn-sm btn-info" 
                                                     data-bs-toggle="modal" 
                                                     data-bs-target="#detailModal<?= $purchase['id'] ?>"
