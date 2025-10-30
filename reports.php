@@ -31,6 +31,11 @@ require_once __DIR__ . '/models/Purchase.php';
 require_once __DIR__ . '/models/Delivery.php';
 require_once __DIR__ . '/models/Report.php';
 
+// Composer autoload (necesario para PhpSpreadsheet y TCPDF)
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require_once __DIR__ . '/vendor/autoload.php';
+}
+
 // Cargar utilidades de autenticación
 require_once __DIR__ . '/includes/auth.php';
 
