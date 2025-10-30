@@ -10,6 +10,12 @@ $projectId = $project['id'];
     <title>Registrar Compra - <?= h($project['nombre']) ?> - <?= h(APP_NAME) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <style>
+        .select2-container .select2-selection--single { height: 38px; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 38px; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 36px; }
+    </style>
 </head>
 <body>
     <?php include __DIR__ . '/../layouts/header.php'; ?>
@@ -77,6 +83,13 @@ $projectId = $project['id'];
                                                 </select>
                                                 <input type="number" class="form-control costo-input" name="costo_unitario[]" required min="0" step="0.01" placeholder="0.00">
                                             </div>
+                                            <div class="mt-1 d-none tc-wrapper">
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text">TC</span>
+                                                    <input type="number" class="form-control tc-input" name="tipo_cambio[]" min="0.0001" step="0.0001" placeholder="Tipo de cambio (MXN/USD)">
+                                                </div>
+                                                <small class="form-text text-muted">Se usa para convertir USD a MXN en el resumen</small>
+                                            </div>
                                             <small class="form-text text-muted">Precio por unidad</small>
                                         </div>
                                         <div class="col-md-1 d-grid">
@@ -119,6 +132,9 @@ $projectId = $project['id'];
                                     <p class="mb-1"><strong>Items:</strong> <span id="summary-items">1</span></p>
                                     <p class="mb-0"><strong>Total estimado (por moneda):</strong></p>
                                     <ul id="summary-totals" class="mb-0"></ul>
+                                    <hr>
+                                    <p class="mb-1"><strong>Total USD (solo ítems en USD):</strong> <span id="summary-total-usd">US$0.00</span></p>
+                                    <p class="mb-0"><strong>Total MXN (USD convertidos con TC):</strong> <span id="summary-total-mxn">$0.00</span></p>
                                 </div>
                             </div>
 
@@ -138,6 +154,8 @@ $projectId = $project['id'];
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         function updateUnidadHint(row) {
             const select = row.querySelector('.material-select');
@@ -150,12 +168,25 @@ $projectId = $project['id'];
         function recalcSummary() {
             const rows = document.querySelectorAll('#items-container .purchase-item');
             const totalsByCurrency = {};
+            let totalUSD = 0; // solo ítems en USD
+            let totalMXN = 0; // incluye MXN + USD convertidos con TC
             rows.forEach(row => {
                 const qty = parseFloat(row.querySelector('.qty-input').value) || 0;
                 const costo = parseFloat(row.querySelector('.costo-input').value) || 0;
                 const moneda = row.querySelector('.moneda-select').value || 'MXN';
                 const subtotal = qty * costo;
                 totalsByCurrency[moneda] = (totalsByCurrency[moneda] || 0) + subtotal;
+
+                if (moneda === 'USD') {
+                    const tcInput = row.querySelector('.tc-input');
+                    const tc = tcInput && parseFloat(tcInput.value) > 0 ? parseFloat(tcInput.value) : 0;
+                    totalUSD += subtotal;
+                    if (tc > 0) {
+                        totalMXN += subtotal * tc;
+                    }
+                } else if (moneda === 'MXN') {
+                    totalMXN += subtotal;
+                }
             });
 
             document.getElementById('summary-items').textContent = rows.length.toString();
@@ -168,13 +199,27 @@ $projectId = $project['id'];
                 li.textContent = moneda + ': ' + symbol + totalsByCurrency[moneda].toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 list.appendChild(li);
             });
+
+            document.getElementById('summary-total-usd').textContent = 'US$' + totalUSD.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('summary-total-mxn').textContent = '$' + totalMXN.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         function wireRowEvents(row) {
             row.querySelector('.material-select').addEventListener('change', () => { updateUnidadHint(row); });
             row.querySelector('.qty-input').addEventListener('input', recalcSummary);
             row.querySelector('.costo-input').addEventListener('input', recalcSummary);
-            row.querySelector('.moneda-select').addEventListener('change', recalcSummary);
+            row.querySelector('.moneda-select').addEventListener('change', () => {
+                const moneda = row.querySelector('.moneda-select').value;
+                const tcWrap = row.querySelector('.tc-wrapper');
+                if (moneda === 'USD') {
+                    tcWrap.classList.remove('d-none');
+                } else {
+                    tcWrap.classList.add('d-none');
+                }
+                recalcSummary();
+            });
+            const tc = row.querySelector('.tc-input');
+            if (tc) tc.addEventListener('input', recalcSummary);
             row.querySelector('.remove-item').addEventListener('click', () => {
                 const container = document.getElementById('items-container');
                 if (container.querySelectorAll('.purchase-item').length > 1) {
@@ -183,6 +228,14 @@ $projectId = $project['id'];
                 }
             });
             updateUnidadHint(row);
+            // activar select2 en el select del material
+            if (window.jQuery && typeof jQuery.fn.select2 === 'function') {
+                const $select = jQuery(row).find('.material-select');
+                if ($select.data('select2')) {
+                    $select.select2('destroy');
+                }
+                $select.select2({ placeholder: 'Buscar material...', width: '100%' });
+            }
         }
 
         document.getElementById('add-item').addEventListener('click', () => {
@@ -194,6 +247,10 @@ $projectId = $project['id'];
             clone.querySelector('.qty-input').value = '';
             clone.querySelector('.costo-input').value = '';
             clone.querySelector('.moneda-select').value = 'MXN';
+            const tcWrap = clone.querySelector('.tc-wrapper');
+            const tcInput = clone.querySelector('.tc-input');
+            if (tcWrap) tcWrap.classList.add('d-none');
+            if (tcInput) tcInput.value = '';
             wireRowEvents(clone);
             container.appendChild(clone);
             recalcSummary();
