@@ -105,6 +105,7 @@ CREATE TABLE IF NOT EXISTS purchases (
   qty_comprada     DECIMAL(12,2) NOT NULL CHECK (qty_comprada > 0),
   costo_unitario   DECIMAL(12,2) NOT NULL CHECK (costo_unitario >= 0),
   moneda           VARCHAR(10) DEFAULT 'MXN',
+  tipo_cambio      DECIMAL(12,4) NULL,
   proveedor        VARCHAR(150),
   numero_factura   VARCHAR(50),
   comprado_por     INT UNSIGNED NOT NULL,

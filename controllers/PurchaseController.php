@@ -125,6 +125,7 @@ class PurchaseController
         $cantidades = $_POST['qty_comprada'] ?? [];
         $costos = $_POST['costo_unitario'] ?? [];
         $monedas = $_POST['moneda'] ?? [];
+        $tiposCambio = $_POST['tipo_cambio'] ?? [];
 
         if (!$projectId || !is_array($materialIds) || !is_array($cantidades) || !is_array($costos)) {
             setFlashMessage('error', 'Datos de compra inválidos');
@@ -146,6 +147,7 @@ class PurchaseController
             $qty = (float)$cantidades[$i];
             $costo = (float)$costos[$i];
             $moneda = is_array($monedas) && isset($monedas[$i]) ? $monedas[$i] : 'MXN';
+            $tc = is_array($tiposCambio) && isset($tiposCambio[$i]) ? (float)$tiposCambio[$i] : 0.0;
 
             if (!$materialId) { $errors++; continue; }
             if ($qty <= 0) { $errors++; continue; }
@@ -157,6 +159,7 @@ class PurchaseController
                 'qty_comprada' => $qty,
                 'costo_unitario' => $costo,
                 'moneda' => $moneda,
+                'tipo_cambio' => ($moneda === 'USD' && $tc > 0) ? $tc : null,
                 'proveedor' => $proveedor,
                 'numero_factura' => $numeroFactura,
                 'comprado_por' => $user['id'],

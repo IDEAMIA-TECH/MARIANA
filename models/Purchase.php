@@ -70,8 +70,8 @@ class Purchase
             // Insertar compra
             $stmt = $pdo->prepare("
                 INSERT INTO purchases 
-                (project_id, material_id, qty_comprada, costo_unitario, moneda, proveedor, numero_factura, comprado_por, fecha_compra)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (project_id, material_id, qty_comprada, costo_unitario, moneda, tipo_cambio, proveedor, numero_factura, comprado_por, fecha_compra)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             
             $stmt->execute([
@@ -80,6 +80,7 @@ class Purchase
                 $data['qty_comprada'],
                 $data['costo_unitario'],
                 $data['moneda'] ?? 'MXN',
+                $data['tipo_cambio'] ?? null,
                 $data['proveedor'] ?? null,
                 $data['numero_factura'] ?? null,
                 $data['comprado_por'],
