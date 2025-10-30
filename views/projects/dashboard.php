@@ -188,6 +188,7 @@ $projectId = $project['id'];
                                 'total_comprada' => 0,
                                 'qty_disponible' => 0,
                                 'qty_entregada' => 0,
+                                'qty_instalada' => 0,
                                 'total_costo' => 0,
                                 'pct_entregado' => 0,
                                 'pct_disponible' => 0,
@@ -201,6 +202,7 @@ $projectId = $project['id'];
                         $categoryTotals[$categoria]['total_comprada'] += $req['total_comprada'] ?? 0;
                         $categoryTotals[$categoria]['qty_disponible'] += $req['qty_disponible'] ?? 0;
                         $categoryTotals[$categoria]['qty_entregada'] += $req['qty_entregada'] ?? 0;
+                        $categoryTotals[$categoria]['qty_instalada'] += $req['qty_instalada'] ?? 0;
                         $categoryTotals[$categoria]['total_costo'] += $req['total_costo'] ?? 0;
                     }
                     
@@ -242,6 +244,7 @@ $projectId = $project['id'];
                                             <th>Comprado</th>
                                             <th>Disponible</th>
                                             <th>Entregado</th>
+                                            <th>Instalado</th>
                                             <th>% Entregado</th>
                                             <th>% En Almacén</th>
                                             <th>% Faltante</th>
@@ -286,6 +289,20 @@ $projectId = $project['id'];
                                         <td><?= number_format($req['total_comprada'], 2) ?> <?= h($req['unidad']) ?></td>
                                         <td><?= number_format($req['qty_disponible'], 2) ?> <?= h($req['unidad']) ?></td>
                                         <td><strong><?= number_format($req['qty_entregada'], 2) ?> <?= h($req['unidad']) ?></strong></td>
+                                        <td>
+                                            <?php 
+                                            $qtyInstalada = (float)($req['qty_instalada'] ?? 0);
+                                            $pctInstalado = $req['qty_entregada'] > 0 
+                                                ? round(($qtyInstalada / $req['qty_entregada']) * 100, 1) 
+                                                : 0;
+                                            ?>
+                                            <span class="badge bg-<?= $qtyInstalada > 0 ? ($pctInstalado >= 100 ? 'success' : 'info') : 'secondary' ?>">
+                                                <?= number_format($qtyInstalada, 2) ?> <?= h($req['unidad']) ?>
+                                            </span>
+                                            <?php if ($qtyInstalada > 0 && $req['qty_entregada'] > 0): ?>
+                                                <br><small class="text-muted"><?= $pctInstalado ?>% del entregado</small>
+                                            <?php endif; ?>
+                                        </td>
                                         <td>
                                             <div class="progress" style="height: 20px;">
                                                 <div class="progress-bar bg-<?= $pctEntregado >= 100 ? 'success' : 'primary' ?>" 
@@ -332,6 +349,11 @@ $projectId = $project['id'];
                                             <td><?= number_format($categoryTotal['total_comprada'], 2) ?></td>
                                             <td><?= number_format($categoryTotal['qty_disponible'], 2) ?></td>
                                             <td><strong><?= number_format($categoryTotal['qty_entregada'], 2) ?></strong></td>
+                                            <td>
+                                                <span class="badge bg-<?= $categoryTotal['qty_instalada'] > 0 ? 'info' : 'secondary' ?>">
+                                                    <?= number_format($categoryTotal['qty_instalada'], 2) ?>
+                                                </span>
+                                            </td>
                                             <td>
                                                 <span class="badge bg-<?= $categoryTotal['pct_entregado'] >= 100 ? 'success' : 'primary' ?>">
                                                     <?= $categoryTotal['pct_entregado'] ?>%
@@ -386,6 +408,7 @@ $projectId = $project['id'];
                                             <th>Comprado</th>
                                             <th>Disponible</th>
                                             <th>Entregado</th>
+                                            <th>Instalado</th>
                                             <th>% Entregado</th>
                                             <th>% En Almacén</th>
                                             <th>% Faltante</th>
@@ -399,6 +422,13 @@ $projectId = $project['id'];
                                             <td><strong><?= number_format($kpis['total_comprado'], 2) ?></strong></td>
                                             <td><strong><?= number_format($kpis['total_disponible'], 2) ?></strong></td>
                                             <td><strong><?= number_format($kpis['total_entregado'], 2) ?></strong></td>
+                                            <td>
+                                                <strong>
+                                                    <span class="badge bg-<?= $kpis['total_instalado'] > 0 ? 'info' : 'secondary' ?> fs-6">
+                                                        <?= number_format($kpis['total_instalado'], 2) ?>
+                                                    </span>
+                                                </strong>
+                                            </td>
                                             <td>
                                                 <?php $grandPctEntregado = $kpis['total_requerido'] > 0 ? round(($kpis['total_entregado'] / $kpis['total_requerido']) * 100, 1) : 0; ?>
                                                 <span class="badge bg-<?= $grandPctEntregado >= 100 ? 'success' : 'primary' ?> fs-6">

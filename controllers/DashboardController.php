@@ -44,6 +44,7 @@ class DashboardController
                 m.sku, m.descripcion, m.unidad, m.categoria,
                 COALESCE(inv.qty_disponible, 0) as qty_disponible,
                 COALESCE(inv.qty_entregada, 0) as qty_entregada,
+                COALESCE(inv.qty_instalada, 0) as qty_instalada,
                 COALESCE(stats.total_qty_comprada, 0) as total_comprada,
                 COALESCE(stats.total_costo, 0) as total_costo,
                 COALESCE(stats.costo_promedio_calc, 0) as costo_promedio,
@@ -91,6 +92,7 @@ class DashboardController
         $totalComprado = 0;
         $totalDisponible = 0;
         $totalEntregado = 0;
+        $totalInstalado = 0;
         $totalInvertido = 0;
         $materialesCompletos = 0;
         $materialesParciales = 0;
@@ -101,6 +103,7 @@ class DashboardController
             $totalComprado += (float)$req['total_comprada'];
             $totalDisponible += (float)$req['qty_disponible'];
             $totalEntregado += (float)$req['qty_entregada'];
+            $totalInstalado += (float)($req['qty_instalada'] ?? 0);
             $totalInvertido += (float)$req['total_costo'];
 
             $pctEntregado = (float)$req['pct_entregado'];
@@ -126,6 +129,7 @@ class DashboardController
             'total_comprado' => $totalComprado,
             'total_disponible' => $totalDisponible,
             'total_entregado' => $totalEntregado,
+            'total_instalado' => $totalInstalado,
             'total_invertido' => $totalInvertido,
             'pct_avance_fisico' => $pctAvanceFisico,
             'pct_comprado' => $pctComprado,
