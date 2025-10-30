@@ -48,39 +48,48 @@ $projectId = $project['id'];
                             <input type="hidden" name="project_id" value="<?= $projectId ?>">
 
                             <div class="mb-3">
-                                <label for="material_id" class="form-label">Material <span class="text-danger">*</span></label>
-                                <select class="form-select" id="material_id" name="material_id" required>
-                                    <option value="">Seleccionar material...</option>
-                                    <?php foreach ($materials as $material): ?>
-                                        <option value="<?= $material['id'] ?>" data-unidad="<?= h($material['unidad']) ?>">
-                                            <?= h($material['sku']) ?> - <?= h($material['descripcion']) ?> (<?= h($material['unidad']) ?>)
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <small class="form-text text-muted">Solo se muestran materiales en los requerimientos del proyecto</small>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="qty_comprada" class="form-label">Cantidad Comprada <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="qty_comprada" name="qty_comprada" 
-                                           required min="0.01" step="0.01" placeholder="0.00">
-                                    <small class="form-text text-muted" id="unidad-hint">Unidad del material</small>
-                                </div>
-
-                                <div class="col-md-6 mb-3">
-                                    <label for="costo_unitario" class="form-label">Costo Unitario <span class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <select class="form-select" id="moneda" name="moneda" style="max-width: 100px;">
-                                            <option value="MXN" selected>MXN</option>
-                                            <option value="USD">USD</option>
-                                            <option value="EUR">EUR</option>
-                                        </select>
-                                        <input type="number" class="form-control" id="costo_unitario" name="costo_unitario" 
-                                               required min="0" step="0.01" placeholder="0.00">
+                                <label class="form-label">Productos de la compra <span class="text-danger">*</span></label>
+                                <div id="items-container">
+                                    <div class="purchase-item row g-2 align-items-end mb-2" data-index="0">
+                                        <div class="col-md-5">
+                                            <label class="form-label">Material</label>
+                                            <select class="form-select material-select" name="material_id[]" required>
+                                                <option value="">Seleccionar material...</option>
+                                                <?php foreach ($materials as $material): ?>
+                                                    <option value="<?= $material['id'] ?>" data-unidad="<?= h($material['unidad']) ?>">
+                                                        <?= h($material['sku']) ?> - <?= h($material['descripcion']) ?> (<?= h($material['unidad']) ?>)
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <small class="form-text text-muted unidad-hint">Unidad del material</small>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Cantidad</label>
+                                            <input type="number" class="form-control qty-input" name="qty_comprada[]" required min="0.01" step="0.01" placeholder="0.00">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Costo Unitario</label>
+                                            <div class="input-group">
+                                                <select class="form-select moneda-select" name="moneda[]" style="max-width: 100px;">
+                                                    <option value="MXN" selected>MXN</option>
+                                                    <option value="USD">USD</option>
+                                                    <option value="EUR">EUR</option>
+                                                </select>
+                                                <input type="number" class="form-control costo-input" name="costo_unitario[]" required min="0" step="0.01" placeholder="0.00">
+                                            </div>
+                                            <small class="form-text text-muted">Precio por unidad</small>
+                                        </div>
+                                        <div class="col-md-1 d-grid">
+                                            <button type="button" class="btn btn-outline-danger remove-item" title="Eliminar fila">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <small class="form-text text-muted">Precio por unidad</small>
                                 </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="add-item">
+                                    <i class="bi bi-plus-circle"></i> Agregar producto
+                                </button>
+                                <small class="form-text text-muted d-block mt-1">Solo se muestran materiales en los requerimientos del proyecto</small>
                             </div>
 
                             <div class="mb-3">
@@ -107,9 +116,9 @@ $projectId = $project['id'];
                             <div class="card bg-light mb-3">
                                 <div class="card-body">
                                     <h6>Resumen:</h6>
-                                    <p class="mb-1"><strong>Cantidad:</strong> <span id="summary-qty">0</span></p>
-                                    <p class="mb-1"><strong>Costo Unitario:</strong> <span id="summary-unit">$0.00</span></p>
-                                    <p class="mb-0"><strong>Total:</strong> <span id="summary-total" class="text-primary fs-5">$0.00</span></p>
+                                    <p class="mb-1"><strong>Items:</strong> <span id="summary-items">1</span></p>
+                                    <p class="mb-0"><strong>Total estimado (por moneda):</strong></p>
+                                    <ul id="summary-totals" class="mb-0"></ul>
                                 </div>
                             </div>
 
@@ -130,33 +139,69 @@ $projectId = $project['id'];
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Actualizar unidad cuando se selecciona material
-        document.getElementById('material_id').addEventListener('change', function() {
-            const selected = this.options[this.selectedIndex];
-            const unidad = selected.getAttribute('data-unidad') || '';
-            document.getElementById('unidad-hint').textContent = unidad || 'Unidad del material';
-            calculateTotal();
-        });
-
-        // Calcular total automáticamente
-        function calculateTotal() {
-            const qty = parseFloat(document.getElementById('qty_comprada').value) || 0;
-            const costo = parseFloat(document.getElementById('costo_unitario').value) || 0;
-            const moneda = document.getElementById('moneda').value;
-            const total = qty * costo;
-
-            document.getElementById('summary-qty').textContent = qty.toFixed(2);
-            
-            const symbols = { 'MXN': '$', 'USD': 'US$', 'EUR': '€' };
-            const symbol = symbols[moneda] || '$';
-            
-            document.getElementById('summary-unit').textContent = symbol + costo.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            document.getElementById('summary-total').textContent = symbol + total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        function updateUnidadHint(row) {
+            const select = row.querySelector('.material-select');
+            const hint = row.querySelector('.unidad-hint');
+            const selected = select.options[select.selectedIndex];
+            const unidad = selected ? (selected.getAttribute('data-unidad') || '') : '';
+            hint.textContent = unidad || 'Unidad del material';
         }
 
-        document.getElementById('qty_comprada').addEventListener('input', calculateTotal);
-        document.getElementById('costo_unitario').addEventListener('input', calculateTotal);
-        document.getElementById('moneda').addEventListener('change', calculateTotal);
+        function recalcSummary() {
+            const rows = document.querySelectorAll('#items-container .purchase-item');
+            const totalsByCurrency = {};
+            rows.forEach(row => {
+                const qty = parseFloat(row.querySelector('.qty-input').value) || 0;
+                const costo = parseFloat(row.querySelector('.costo-input').value) || 0;
+                const moneda = row.querySelector('.moneda-select').value || 'MXN';
+                const subtotal = qty * costo;
+                totalsByCurrency[moneda] = (totalsByCurrency[moneda] || 0) + subtotal;
+            });
+
+            document.getElementById('summary-items').textContent = rows.length.toString();
+            const list = document.getElementById('summary-totals');
+            list.innerHTML = '';
+            const symbols = { 'MXN': '$', 'USD': 'US$', 'EUR': '€' };
+            Object.keys(totalsByCurrency).forEach(moneda => {
+                const li = document.createElement('li');
+                const symbol = symbols[moneda] || '$';
+                li.textContent = moneda + ': ' + symbol + totalsByCurrency[moneda].toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                list.appendChild(li);
+            });
+        }
+
+        function wireRowEvents(row) {
+            row.querySelector('.material-select').addEventListener('change', () => { updateUnidadHint(row); });
+            row.querySelector('.qty-input').addEventListener('input', recalcSummary);
+            row.querySelector('.costo-input').addEventListener('input', recalcSummary);
+            row.querySelector('.moneda-select').addEventListener('change', recalcSummary);
+            row.querySelector('.remove-item').addEventListener('click', () => {
+                const container = document.getElementById('items-container');
+                if (container.querySelectorAll('.purchase-item').length > 1) {
+                    row.remove();
+                    recalcSummary();
+                }
+            });
+            updateUnidadHint(row);
+        }
+
+        document.getElementById('add-item').addEventListener('click', () => {
+            const container = document.getElementById('items-container');
+            const template = container.querySelector('.purchase-item');
+            const clone = template.cloneNode(true);
+            // reset inputs
+            clone.querySelector('.material-select').selectedIndex = 0;
+            clone.querySelector('.qty-input').value = '';
+            clone.querySelector('.costo-input').value = '';
+            clone.querySelector('.moneda-select').value = 'MXN';
+            wireRowEvents(clone);
+            container.appendChild(clone);
+            recalcSummary();
+        });
+
+        // Inicializar primera fila
+        wireRowEvents(document.querySelector('#items-container .purchase-item'));
+        recalcSummary();
     </script>
 </body>
 </html>

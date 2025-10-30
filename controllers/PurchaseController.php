@@ -115,53 +115,72 @@ class PurchaseController
         }
 
         $projectId = (int)($_POST['project_id'] ?? 0);
-        $materialId = (int)($_POST['material_id'] ?? 0);
-        $qty = floatval($_POST['qty_comprada'] ?? 0);
-        $costo = floatval($_POST['costo_unitario'] ?? 0);
-
-        // Validaciones
-        if (!$projectId || !$materialId) {
-            setFlashMessage('error', 'Proyecto y material son requeridos');
-            redirect(base_url("purchases.php?project_id=$projectId&action=create"));
-            return;
-        }
-
-        if ($qty <= 0) {
-            setFlashMessage('error', 'La cantidad debe ser mayor a cero');
-            redirect(base_url("purchases.php?project_id=$projectId&action=create"));
-            return;
-        }
-
-        if ($costo < 0) {
-            setFlashMessage('error', 'El costo unitario no puede ser negativo');
-            redirect(base_url("purchases.php?project_id=$projectId&action=create"));
-            return;
-        }
-
         $user = getCurrentUser();
         $fecha = $_POST['fecha_compra'] ?? date('Y-m-d');
+        $proveedor = trim($_POST['proveedor'] ?? '');
+        $numeroFactura = trim($_POST['numero_factura'] ?? '');
 
-        $data = [
-            'project_id' => $projectId,
-            'material_id' => $materialId,
-            'qty_comprada' => $qty,
-            'costo_unitario' => $costo,
-            'moneda' => $_POST['moneda'] ?? 'MXN',
-            'proveedor' => trim($_POST['proveedor'] ?? ''),
-            'numero_factura' => trim($_POST['numero_factura'] ?? ''),
-            'comprado_por' => $user['id'],
-            'fecha_compra' => $fecha
-        ];
+        // Normalizar a arrays
+        $materialIds = $_POST['material_id'] ?? [];
+        $cantidades = $_POST['qty_comprada'] ?? [];
+        $costos = $_POST['costo_unitario'] ?? [];
+        $monedas = $_POST['moneda'] ?? [];
 
-        $purchaseId = Purchase::create($data);
-
-        if ($purchaseId) {
-            setFlashMessage('success', 'Compra registrada exitosamente. El inventario y costos se actualizaron automáticamente.');
-            redirect(base_url("purchases.php?project_id=$projectId"));
-        } else {
-            setFlashMessage('error', 'Error al registrar la compra. Verifica que el material esté en los requerimientos del proyecto.');
+        if (!$projectId || !is_array($materialIds) || !is_array($cantidades) || !is_array($costos)) {
+            setFlashMessage('error', 'Datos de compra inválidos');
             redirect(base_url("purchases.php?project_id=$projectId&action=create"));
+            return;
         }
+
+        $numItems = min(count($materialIds), count($cantidades), count($costos));
+        if ($numItems === 0) {
+            setFlashMessage('error', 'Agrega al menos un producto');
+            redirect(base_url("purchases.php?project_id=$projectId&action=create"));
+            return;
+        }
+
+        $success = 0;
+        $errors = 0;
+        for ($i = 0; $i < $numItems; $i++) {
+            $materialId = (int)$materialIds[$i];
+            $qty = (float)$cantidades[$i];
+            $costo = (float)$costos[$i];
+            $moneda = is_array($monedas) && isset($monedas[$i]) ? $monedas[$i] : 'MXN';
+
+            if (!$materialId) { $errors++; continue; }
+            if ($qty <= 0) { $errors++; continue; }
+            if ($costo < 0) { $errors++; continue; }
+
+            $data = [
+                'project_id' => $projectId,
+                'material_id' => $materialId,
+                'qty_comprada' => $qty,
+                'costo_unitario' => $costo,
+                'moneda' => $moneda,
+                'proveedor' => $proveedor,
+                'numero_factura' => $numeroFactura,
+                'comprado_por' => $user['id'],
+                'fecha_compra' => $fecha
+            ];
+
+            $purchaseId = Purchase::create($data);
+            if ($purchaseId) { $success++; } else { $errors++; }
+        }
+
+        if ($success > 0 && $errors === 0) {
+            setFlashMessage('success', 'Compra registrada con ' . $success . ' producto(s). Inventario y costos actualizados.');
+            redirect(base_url("purchases.php?project_id=$projectId"));
+            return;
+        }
+
+        if ($success > 0 && $errors > 0) {
+            setFlashMessage('error', 'Algunos productos no se registraron (' . $errors . '). Verifica requerimientos y datos.');
+            redirect(base_url("purchases.php?project_id=$projectId"));
+            return;
+        }
+
+        setFlashMessage('error', 'No se pudo registrar la compra. Verifica que los materiales estén en los requerimientos del proyecto.');
+        redirect(base_url("purchases.php?project_id=$projectId&action=create"));
     }
 
     /**
