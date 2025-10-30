@@ -105,6 +105,28 @@ $projectId = $project['id'];
             </div>
         </div>
 
+        <!-- Tarjetas de Compras en Monedas -->
+        <div class="row mb-4">
+            <div class="col-md-6 mb-3">
+                <div class="card kpi-card border-primary">
+                    <div class="card-body text-center">
+                        <i class="bi bi-currency-dollar text-primary" style="font-size: 2rem;"></i>
+                        <h4 class="mt-2 text-primary"><?= formatCurrency($totalUSD ?? 0, 'USD') ?></h4>
+                        <p class="text-muted mb-0">Total compras en USD</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card kpi-card border-success">
+                    <div class="card-body text-center">
+                        <i class="bi bi-cash-coin text-success" style="font-size: 2rem;"></i>
+                        <h4 class="mt-2 text-success"><?= formatCurrency($totalGlobalMXN ?? 0, 'MXN') ?></h4>
+                        <p class="text-muted mb-0">Total global en MXN (MXN + USD convertidos)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Estadísticas de Materiales -->
         <div class="row mb-4">
             <div class="col-md-4">

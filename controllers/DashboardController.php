@@ -77,6 +77,26 @@ class DashboardController
         $purchasesStats = Purchase::getTotals($projectId);
         $deliveriesStats = Delivery::getTotals($projectId);
         
+        // Totales por moneda para tarjetas (USD y MXN global)
+        $rows = Database::fetchAll(
+            "SELECT moneda, qty_comprada, costo_unitario, tipo_cambio, cancelado
+             FROM purchases WHERE project_id = ?",
+            [$projectId]
+        );
+        $totalUSD = 0.0;
+        $totalGlobalMXN = 0.0;
+        foreach ($rows as $r) {
+            if (!empty($r['cancelado'])) { continue; }
+            $sub = (float)$r['qty_comprada'] * (float)$r['costo_unitario'];
+            if (($r['moneda'] ?? 'MXN') === 'USD') {
+                $totalUSD += $sub;
+                $tc = (float)($r['tipo_cambio'] ?? 0);
+                if ($tc > 0) { $totalGlobalMXN += $sub * $tc; }
+            } elseif (($r['moneda'] ?? 'MXN') === 'MXN') {
+                $totalGlobalMXN += $sub;
+            }
+        }
+
         // Datos para gráficas
         $chartData = self::prepareChartData($requirements);
 
