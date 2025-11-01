@@ -185,5 +185,139 @@ class DeliveryController
             redirect(base_url("deliveries.php?project_id=$projectId&action=create"));
         }
     }
+
+    /**
+     * Mostrar formulario de edición de entrega
+     */
+    public static function edit(): void
+    {
+        $projectId = (int)($_GET['project_id'] ?? 0);
+        $id = (int)($_GET['id'] ?? 0);
+        if (!$projectId || !$id) {
+            setFlashMessage('error', 'Solicitud inválida');
+            redirect(base_url('projects.php'));
+            return;
+        }
+
+        if (!hasAnyRole([ROLE_ADMIN, ROLE_PM, ROLE_ALMACEN])) {
+            setFlashMessage('error', 'No tienes permisos para editar entregas');
+            redirect(base_url('projects.php'));
+            return;
+        }
+
+        $project = Project::findById($projectId);
+        $delivery = Delivery::findById($id);
+        if (!$project || !$delivery || (int)$delivery['project_id'] !== $projectId) {
+            setFlashMessage('error', 'Entrega no encontrada');
+            redirect(base_url("deliveries.php?project_id=$projectId"));
+            return;
+        }
+
+        require_once __DIR__ . '/../views/deliveries/edit.php';
+    }
+
+    /**
+     * Actualizar entrega existente
+     */
+    public static function update(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(base_url('projects.php'));
+            return;
+        }
+
+        if (!hasAnyRole([ROLE_ADMIN, ROLE_PM, ROLE_ALMACEN])) {
+            setFlashMessage('error', 'No tienes permisos para editar entregas');
+            redirect(base_url('projects.php'));
+            return;
+        }
+
+        $projectId = (int)($_POST['project_id'] ?? 0);
+        $id = (int)($_POST['id'] ?? 0);
+        $qty = (float)($_POST['qty_entregada'] ?? 0);
+        $entregadoA = trim($_POST['entregado_a'] ?? '');
+        $fecha = $_POST['fecha_entrega'] ?? date('Y-m-d');
+        $comentarios = trim($_POST['comentarios'] ?? '');
+
+        if (!$projectId || !$id) {
+            setFlashMessage('error', 'Solicitud inválida');
+            redirect(base_url('projects.php'));
+            return;
+        }
+        if ($qty <= 0) {
+            setFlashMessage('error', 'La cantidad debe ser mayor a cero');
+            redirect(base_url("deliveries.php?project_id=$projectId&action=edit&id=$id"));
+            return;
+        }
+        if (empty($entregadoA)) {
+            setFlashMessage('error', 'Debes especificar a quién se entregó el material');
+            redirect(base_url("deliveries.php?project_id=$projectId&action=edit&id=$id"));
+            return;
+        }
+
+        // Obtener entrega original
+        $original = Delivery::findById($id);
+        if (!$original) {
+            setFlashMessage('error', 'Entrega no encontrada');
+            redirect(base_url("deliveries.php?project_id=$projectId"));
+            return;
+        }
+
+        // Delegar actualización al modelo
+        $ok = Delivery::updateFields($id, [
+            'qty_entregada' => $qty,
+            'entregado_a' => $entregadoA,
+            'fecha_entrega' => $fecha,
+            'comentarios' => $comentarios,
+        ], $original);
+
+        if ($ok) {
+            setFlashMessage('success', 'Entrega actualizada correctamente. Inventario recalculado.');
+            redirect(base_url("deliveries.php?project_id=$projectId"));
+        } else {
+            setFlashMessage('error', 'No se pudo actualizar la entrega');
+            redirect(base_url("deliveries.php?project_id=$projectId&action=edit&id=$id"));
+        }
+    }
+
+    /**
+     * Borrar entrega (revertir cambios en inventario)
+     */
+    public static function destroy(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(base_url('projects.php'));
+            return;
+        }
+
+        if (!hasAnyRole([ROLE_ADMIN, ROLE_PM, ROLE_ALMACEN])) {
+            setFlashMessage('error', 'No tienes permisos para borrar entregas');
+            redirect(base_url('projects.php'));
+            return;
+        }
+
+        $projectId = (int)($_POST['project_id'] ?? 0);
+        $id = (int)($_POST['id'] ?? 0);
+        if (!$projectId || !$id) {
+            setFlashMessage('error', 'Solicitud inválida');
+            redirect(base_url('projects.php'));
+            return;
+        }
+
+        $delivery = Delivery::findById($id);
+        if (!$delivery || (int)$delivery['project_id'] !== $projectId) {
+            setFlashMessage('error', 'Entrega no encontrada');
+            redirect(base_url("deliveries.php?project_id=$projectId"));
+            return;
+        }
+
+        if (Delivery::delete($id)) {
+            setFlashMessage('success', 'Entrega borrada exitosamente. El inventario se revirtió automáticamente.');
+        } else {
+            setFlashMessage('error', 'Error al borrar la entrega');
+        }
+
+        redirect(base_url("deliveries.php?project_id=$projectId"));
+    }
 }
 

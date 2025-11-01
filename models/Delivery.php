@@ -185,5 +185,138 @@ class Delivery
         
         return $result ? (float)$result['total'] : 0.0;
     }
+
+    /**
+     * Actualizar campos permitidos y recalcular inventario.
+     * No permite cambiar el material.
+     */
+    public static function updateFields(int $id, array $fields, array $original): bool
+    {
+        try {
+            $pdo = Database::getConnection();
+            $pdo->beginTransaction();
+
+            $allowed = ['qty_entregada', 'entregado_a', 'fecha_entrega', 'comentarios'];
+            $setParts = [];
+            $params = [];
+            foreach ($allowed as $k) {
+                if (array_key_exists($k, $fields)) {
+                    $setParts[] = "$k = ?";
+                    $params[] = $fields[$k];
+                }
+            }
+            if (empty($setParts)) {
+                $pdo->rollBack();
+                return false;
+            }
+
+            $params[] = $id;
+            Database::query("UPDATE deliveries SET " . implode(', ', $setParts) . " WHERE id = ?", $params);
+
+            // Recalcular inventario para este material en este proyecto
+            $projectId = (int)$original['project_id'];
+            $materialId = (int)$original['material_id'];
+
+            // Obtener todas las entregas para recalcular
+            $allDeliveries = Database::fetchAll(
+                "SELECT qty_entregada FROM deliveries WHERE project_id = ? AND material_id = ?",
+                [$projectId, $materialId]
+            );
+
+            $totalEntregada = 0.0;
+            foreach ($allDeliveries as $d) {
+                $totalEntregada += (float)$d['qty_entregada'];
+            }
+
+            // Obtener total comprada (de purchases)
+            $totalComprada = Database::fetchOne(
+                "SELECT COALESCE(SUM(qty_comprada), 0) as total FROM purchases WHERE project_id = ? AND material_id = ? AND cancelado = 0",
+                [$projectId, $materialId]
+            );
+            $totalComp = (float)($totalComprada['total'] ?? 0);
+
+            // Inventario disponible = comprado - entregado
+            $disponible = max(0, $totalComp - $totalEntregada);
+
+            // Actualizar inventory
+            Database::query(
+                "INSERT INTO inventory (project_id, material_id, qty_disponible, qty_entregada)
+                 VALUES (?, ?, ?, ?)
+                 ON DUPLICATE KEY UPDATE qty_disponible = VALUES(qty_disponible), qty_entregada = VALUES(qty_entregada), last_update = NOW()",
+                [$projectId, $materialId, $disponible, $totalEntregada]
+            );
+
+            $pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            if (isset($pdo) && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log('Error actualizando entrega: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Borrar entrega y revertir cambios en inventario
+     */
+    public static function delete(int $id): bool
+    {
+        try {
+            $pdo = Database::getConnection();
+            $pdo->beginTransaction();
+
+            $delivery = self::findById($id);
+            if (!$delivery) {
+                $pdo->rollBack();
+                return false;
+            }
+
+            $projectId = (int)$delivery['project_id'];
+            $materialId = (int)$delivery['material_id'];
+            $qtyEntregada = (float)$delivery['qty_entregada'];
+
+            // Borrar la entrega
+            Database::query("DELETE FROM deliveries WHERE id = ?", [$id]);
+
+            // Recalcular inventario
+            $allDeliveries = Database::fetchAll(
+                "SELECT qty_entregada FROM deliveries WHERE project_id = ? AND material_id = ?",
+                [$projectId, $materialId]
+            );
+
+            $totalEntregada = 0.0;
+            foreach ($allDeliveries as $d) {
+                $totalEntregada += (float)$d['qty_entregada'];
+            }
+
+            // Obtener total comprada
+            $totalComprada = Database::fetchOne(
+                "SELECT COALESCE(SUM(qty_comprada), 0) as total FROM purchases WHERE project_id = ? AND material_id = ? AND cancelado = 0",
+                [$projectId, $materialId]
+            );
+            $totalComp = (float)($totalComprada['total'] ?? 0);
+
+            // Inventario disponible = comprado - entregado
+            $disponible = max(0, $totalComp - $totalEntregada);
+
+            // Actualizar inventory
+            Database::query(
+                "INSERT INTO inventory (project_id, material_id, qty_disponible, qty_entregada)
+                 VALUES (?, ?, ?, ?)
+                 ON DUPLICATE KEY UPDATE qty_disponible = VALUES(qty_disponible), qty_entregada = VALUES(qty_entregada), last_update = NOW()",
+                [$projectId, $materialId, $disponible, $totalEntregada]
+            );
+
+            $pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            if (isset($pdo) && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log('Error borrando entrega: ' . $e->getMessage());
+            return false;
+        }
+    }
 }
 

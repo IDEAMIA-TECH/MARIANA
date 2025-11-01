@@ -53,6 +53,15 @@ switch ($action) {
     case 'store':
         DeliveryController::store();
         break;
+    case 'edit':
+        DeliveryController::edit();
+        break;
+    case 'update':
+        DeliveryController::update();
+        break;
+    case 'destroy':
+        DeliveryController::destroy();
+        break;
     case 'index':
     default:
         DeliveryController::index();
