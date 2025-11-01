@@ -102,7 +102,7 @@ $projectId = $project['id'];
                                                     <option value="USD">USD</option>
                                                     <option value="EUR">EUR</option>
                                                 </select>
-                                                <input type="number" class="form-control costo-input" name="costo_unitario[]" required min="0" step="0.01" placeholder="0.00">
+                                                <input type="number" class="form-control costo-input" name="costo_unitario[]" required min="0" step="0.0001" placeholder="0.00">
                                             </div>
                                             <div class="mt-1 d-none tc-wrapper">
                                                 <div class="input-group input-group-sm">

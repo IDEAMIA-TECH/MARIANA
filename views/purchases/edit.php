@@ -56,7 +56,7 @@ $projectId = $project['id'];
                                             <option value="USD" <?= $purchase['moneda']==='USD'?'selected':'' ?>>USD</option>
                                             <option value="EUR" <?= $purchase['moneda']==='EUR'?'selected':'' ?>>EUR</option>
                                         </select>
-                                        <input type="number" class="form-control" name="costo_unitario" required min="0" step="0.01" value="<?= (float)$purchase['costo_unitario'] ?>">
+                                        <input type="number" class="form-control" name="costo_unitario" required min="0" step="0.0001" value="<?= (float)$purchase['costo_unitario'] ?>">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
