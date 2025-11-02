@@ -126,19 +126,18 @@ class DeliveryController
         }
 
         $projectId = (int)($_POST['project_id'] ?? 0);
-        $materialId = (int)($_POST['material_id'] ?? 0);
-        $qty = floatval($_POST['qty_entregada'] ?? 0);
         $entregadoA = trim($_POST['entregado_a'] ?? '');
+        $user = getCurrentUser();
+        $fecha = $_POST['fecha_entrega'] ?? date('Y-m-d');
+        $comentarios = trim($_POST['comentarios'] ?? '');
 
-        // Validaciones
-        if (!$projectId || !$materialId) {
-            setFlashMessage('error', 'Proyecto y material son requeridos');
-            redirect(base_url("deliveries.php?project_id=$projectId&action=create"));
-            return;
-        }
+        // Normalizar a arrays
+        $materialIds = $_POST['material_id'] ?? [];
+        $cantidades = $_POST['qty_entregada'] ?? [];
 
-        if ($qty <= 0) {
-            setFlashMessage('error', 'La cantidad debe ser mayor a cero');
+        // Validaciones básicas
+        if (!$projectId) {
+            setFlashMessage('error', 'Proyecto no especificado');
             redirect(base_url("deliveries.php?project_id=$projectId&action=create"));
             return;
         }
@@ -149,41 +148,92 @@ class DeliveryController
             return;
         }
 
-        // Verificar inventario disponible
-        $available = Delivery::getAvailableInventory($projectId, $materialId);
-        if ($available < $qty) {
-            setFlashMessage('error', "No hay suficiente inventario disponible. Disponible: " . number_format($available, 2));
+        if (!is_array($materialIds) || !is_array($cantidades)) {
+            setFlashMessage('error', 'Datos de entrega inválidos');
             redirect(base_url("deliveries.php?project_id=$projectId&action=create"));
             return;
         }
 
-        $user = getCurrentUser();
-        $fecha = $_POST['fecha_entrega'] ?? date('Y-m-d');
-
-        $data = [
-            'project_id' => $projectId,
-            'material_id' => $materialId,
-            'qty_entregada' => $qty,
-            'entregado_a' => $entregadoA,
-            'entregado_por' => $user['id'],
-            'fecha_entrega' => $fecha,
-            'comentarios' => trim($_POST['comentarios'] ?? '')
-        ];
-
-        try {
-            $deliveryId = Delivery::create($data);
-
-            if ($deliveryId) {
-                setFlashMessage('success', 'Entrega registrada exitosamente. El inventario se actualizó automáticamente.');
-                redirect(base_url("deliveries.php?project_id=$projectId"));
-            } else {
-                setFlashMessage('error', 'Error al registrar la entrega');
-                redirect(base_url("deliveries.php?project_id=$projectId&action=create"));
-            }
-        } catch (Exception $e) {
-            setFlashMessage('error', $e->getMessage());
+        $numItems = min(count($materialIds), count($cantidades));
+        if ($numItems === 0) {
+            setFlashMessage('error', 'Agrega al menos un producto a entregar');
             redirect(base_url("deliveries.php?project_id=$projectId&action=create"));
+            return;
         }
+
+        $success = 0;
+        $errors = [];
+        
+        for ($i = 0; $i < $numItems; $i++) {
+            $materialId = (int)$materialIds[$i];
+            $qty = (float)$cantidades[$i];
+
+            if (!$materialId) {
+                $errors[] = "Fila " . ($i + 1) . ": Material requerido";
+                continue;
+            }
+
+            if ($qty <= 0) {
+                $errors[] = "Fila " . ($i + 1) . ": La cantidad debe ser mayor a cero";
+                continue;
+            }
+
+            // Verificar inventario disponible
+            $available = Delivery::getAvailableInventory($projectId, $materialId);
+            if ($available < $qty) {
+                $material = Database::fetchOne(
+                    "SELECT sku, descripcion FROM materials WHERE id = ?",
+                    [$materialId]
+                );
+                $matName = $material ? ($material['sku'] . ' - ' . $material['descripcion']) : 'Material ID ' . $materialId;
+                $errors[] = "Fila " . ($i + 1) . ": $matName - Disponible: " . number_format($available, 2) . ", Solicitado: " . number_format($qty, 2);
+                continue;
+            }
+
+            $data = [
+                'project_id' => $projectId,
+                'material_id' => $materialId,
+                'qty_entregada' => $qty,
+                'entregado_a' => $entregadoA,
+                'entregado_por' => $user['id'],
+                'fecha_entrega' => $fecha,
+                'comentarios' => $comentarios
+            ];
+
+            try {
+                $deliveryId = Delivery::create($data);
+                if ($deliveryId) {
+                    $success++;
+                } else {
+                    $errors[] = "Fila " . ($i + 1) . ": Error al registrar";
+                }
+            } catch (Exception $e) {
+                $errors[] = "Fila " . ($i + 1) . ": " . $e->getMessage();
+            }
+        }
+
+        if ($success > 0 && count($errors) === 0) {
+            setFlashMessage('success', "Entrega registrada con $success producto(s). El inventario se actualizó automáticamente.");
+            redirect(base_url("deliveries.php?project_id=$projectId"));
+            return;
+        }
+
+        if ($success > 0 && count($errors) > 0) {
+            $errorMsg = "Algunos productos no se registraron (" . count($errors) . " errores):\n" . implode("\n", array_slice($errors, 0, 5));
+            if (count($errors) > 5) {
+                $errorMsg .= "\n... y " . (count($errors) - 5) . " más";
+            }
+            setFlashMessage('error', $errorMsg);
+            redirect(base_url("deliveries.php?project_id=$projectId"));
+            return;
+        }
+
+        $errorMsg = "No se pudo registrar la entrega:\n" . implode("\n", array_slice($errors, 0, 5));
+        if (count($errors) > 5) {
+            $errorMsg .= "\n... y " . (count($errors) - 5) . " más";
+        }
+        setFlashMessage('error', $errorMsg);
+        redirect(base_url("deliveries.php?project_id=$projectId&action=create"));
     }
 
     /**
