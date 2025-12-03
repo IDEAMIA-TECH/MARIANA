@@ -254,11 +254,10 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
                 ?>
                     <?php foreach ($requirementsByCategory as $categoria => $categoryRequirements):
                         $categoriaSlug = preg_replace('/[^a-zA-Z0-9]/', '_', $categoria);
-                    ?>
-                        <div class="mb-4 category-section" data-categoria="<?= h($categoria) ?>"> 
                         $categoryTotal = $categoryTotals[$categoria];
                         $categoryCount = count($categoryRequirements);
                     ?>
+                        <div class="mb-4 category-section" data-categoria="<?= h($categoria) ?>">
                             <h5 class="mb-3">
                                 <i class="bi bi-folder-fill text-primary"></i> 
                                 <?= h($categoria) ?> 
