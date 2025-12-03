@@ -191,11 +191,18 @@ $canExport = hasAnyRole([ROLE_ADMIN, ROLE_PM]);
                                     <th>Costo Promedio</th>
                                     <th>Último Costo</th>
                                     <th>Último Proveedor</th>
+                                    <th>Moneda</th>
+                                    <th>Tipo de Cambio</th>
                                     <th>Total Invertido</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($costReport as $item): ?>
+                                <?php foreach ($costReport as $item): 
+                                    $moneda = $item['ultima_moneda'] ?? 'MXN';
+                                    $tipoCambio = isset($item['ultimo_tipo_cambio']) && $item['ultimo_tipo_cambio'] > 0 
+                                        ? number_format((float)$item['ultimo_tipo_cambio'], 4) 
+                                        : ($moneda === 'USD' ? 'N/A' : '-');
+                                ?>
                                     <tr>
                                         <td><code><?= h($item['sku']) ?></code></td>
                                         <td><?= h($item['material']) ?></td>
@@ -218,8 +225,14 @@ $canExport = hasAnyRole([ROLE_ADMIN, ROLE_PM]);
                                             </span>
                                         </td>
                                         <td><?= $item['costo_promedio_unitario'] > 0 ? formatCurrency($item['costo_promedio_unitario']) : '-' ?></td>
-                                        <td><?= $item['ultimo_costo'] ? formatCurrency($item['ultimo_costo']) : '-' ?></td>
+                                        <td><?= $item['ultimo_costo'] ? formatCurrency($item['ultimo_costo'], $moneda) : '-' ?></td>
                                         <td><?= h($item['ultimo_proveedor'] ?? '-') ?></td>
+                                        <td>
+                                            <span class="badge bg-<?= $moneda === 'USD' ? 'primary' : ($moneda === 'EUR' ? 'info' : 'success') ?>">
+                                                <?= h($moneda) ?>
+                                            </span>
+                                        </td>
+                                        <td><?= h($tipoCambio) ?></td>
                                         <td><strong><?= formatCurrency($item['total_costo']) ?></strong></td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -232,7 +245,7 @@ $canExport = hasAnyRole([ROLE_ADMIN, ROLE_PM]);
                                     <th><?= number_format(array_sum(array_column($costReport, 'cantidad_disponible')), 2) ?></th>
                                     <th><?= number_format(array_sum(array_column($costReport, 'cantidad_entregada')), 2) ?></th>
                                     <th colspan="4"></th>
-                                    <th colspan="2"></th>
+                                    <th colspan="3"></th>
                                     <th><strong><?= formatCurrency(array_sum(array_column($costReport, 'total_costo'))) ?></strong></th>
                                 </tr>
                             </tfoot>

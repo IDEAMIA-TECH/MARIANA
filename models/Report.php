@@ -35,6 +35,14 @@ class Report
                  WHERE project_id = pr.project_id AND material_id = pr.material_id 
                    AND cancelado = 0 
                  ORDER BY fecha_compra DESC LIMIT 1) AS ultima_fecha_compra,
+                (SELECT moneda FROM purchases 
+                 WHERE project_id = pr.project_id AND material_id = pr.material_id 
+                   AND cancelado = 0 
+                 ORDER BY fecha_compra DESC LIMIT 1) AS ultima_moneda,
+                (SELECT tipo_cambio FROM purchases 
+                 WHERE project_id = pr.project_id AND material_id = pr.material_id 
+                   AND cancelado = 0 
+                 ORDER BY fecha_compra DESC LIMIT 1) AS ultimo_tipo_cambio,
                 -- Porcentajes
                 ROUND((COALESCE(inv.qty_entregada, 0) / pr.qty_requerida) * 100, 2) AS pct_entregado,
                 ROUND((COALESCE(inv.qty_disponible, 0) / pr.qty_requerida) * 100, 2) AS pct_disponible,

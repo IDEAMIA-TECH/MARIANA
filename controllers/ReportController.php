@@ -100,7 +100,7 @@ class ReportController
 
             // Header
             $sheet->setCellValue('A1', 'Reporte del Proyecto: ' . $project['nombre']);
-            $sheet->mergeCells('A1:E1');
+            $sheet->mergeCells('A1:K1');
             $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
 
             $row = 3;
@@ -113,12 +113,14 @@ class ReportController
             $sheet->setCellValue('G' . $row, '% Avance');
             $sheet->setCellValue('H' . $row, 'Costo Promedio');
             $sheet->setCellValue('I' . $row, 'Total Invertido');
+            $sheet->setCellValue('J' . $row, 'Moneda');
+            $sheet->setCellValue('K' . $row, 'Tipo de Cambio');
 
             $headerStyle = [
                 'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                 'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '4472C4']]
             ];
-            $sheet->getStyle('A' . $row . ':I' . $row)->applyFromArray($headerStyle);
+            $sheet->getStyle('A' . $row . ':K' . $row)->applyFromArray($headerStyle);
 
             // Datos
             $costReport = Report::getCostReport($projectId);
@@ -133,11 +135,16 @@ class ReportController
                 $sheet->setCellValue('G' . $row, $item['pct_entregado'] . '%');
                 $sheet->setCellValue('H' . $row, $item['costo_promedio_unitario']);
                 $sheet->setCellValue('I' . $row, $item['total_costo']);
+                $sheet->setCellValue('J' . $row, $item['ultima_moneda'] ?? 'MXN');
+                $tipoCambio = isset($item['ultimo_tipo_cambio']) && $item['ultimo_tipo_cambio'] > 0 
+                    ? number_format((float)$item['ultimo_tipo_cambio'], 4) 
+                    : ($item['ultima_moneda'] === 'USD' ? 'N/A' : '-');
+                $sheet->setCellValue('K' . $row, $tipoCambio);
                 $row++;
             }
 
             // Auto-size columns
-            foreach (range('A', 'I') as $col) {
+            foreach (range('A', 'K') as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
 
@@ -238,10 +245,14 @@ class ReportController
             $html .= '<table border="1" cellpadding="5" style="font-size:8px;">';
             $html .= '<tr style="background-color:#4472C4;color:#FFFFFF;">
                         <th>Material</th><th>Requerido</th><th>Comprado</th><th>Entregado</th>
-                        <th>% Avance</th><th>Costo Prom.</th><th>Total</th>
+                        <th>% Avance</th><th>Costo Prom.</th><th>Moneda</th><th>Tipo Cambio</th><th>Total</th>
                       </tr>';
             
             foreach ($costReport as $item) {
+                $moneda = $item['ultima_moneda'] ?? 'MXN';
+                $tipoCambio = isset($item['ultimo_tipo_cambio']) && $item['ultimo_tipo_cambio'] > 0 
+                    ? number_format((float)$item['ultimo_tipo_cambio'], 4) 
+                    : ($moneda === 'USD' ? 'N/A' : '-');
                 $html .= '<tr>';
                 $html .= '<td>' . htmlspecialchars($item['material']) . '<br><small>' . htmlspecialchars($item['sku']) . '</small></td>';
                 $html .= '<td>' . number_format($item['qty_requerida'], 2) . '</td>';
@@ -249,6 +260,8 @@ class ReportController
                 $html .= '<td>' . number_format($item['cantidad_entregada'], 2) . '</td>';
                 $html .= '<td>' . number_format($item['pct_entregado'], 1) . '%</td>';
                 $html .= '<td>' . formatCurrency($item['costo_promedio_unitario']) . '</td>';
+                $html .= '<td>' . htmlspecialchars($moneda) . '</td>';
+                $html .= '<td>' . htmlspecialchars($tipoCambio) . '</td>';
                 $html .= '<td>' . formatCurrency($item['total_costo']) . '</td>';
                 $html .= '</tr>';
             }
