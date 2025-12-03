@@ -197,8 +197,19 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
 
         <!-- Lista de Requerimientos (BOM) -->
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="bi bi-box-seam"></i> Lista de Materiales (BOM)</h5>
+                <?php if (!empty($requirements) && !empty($categorias)): ?>
+                <div class="d-flex align-items-center gap-2">
+                    <label for="categoria-filter" class="form-label mb-0">Filtrar por categoría:</label>
+                    <select class="form-select form-select-sm" id="categoria-filter" style="width: auto; min-width: 200px;">
+                        <option value="all">Todas las categorías</option>
+                        <?php foreach ($categorias as $cat): ?>
+                            <option value="<?= h($cat) ?>"><?= h($cat) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <?php endif; ?>
             </div>
             <div class="card-body">
                 <?php if (empty($requirements)): ?>
@@ -241,11 +252,13 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
                     // Ordenar categorías alfabéticamente
                     ksort($requirementsByCategory);
                 ?>
-                    <?php foreach ($requirementsByCategory as $categoria => $categoryRequirements): 
+                    <?php foreach ($requirementsByCategory as $categoria => $categoryRequirements):
+                        $categoriaSlug = preg_replace('/[^a-zA-Z0-9]/', '_', $categoria);
+                    ?>
+                        <div class="mb-4 category-section" data-categoria="<?= h($categoria) ?>"> 
                         $categoryTotal = $categoryTotals[$categoria];
                         $categoryCount = count($categoryRequirements);
                     ?>
-                        <div class="mb-4">
                             <h5 class="mb-3">
                                 <i class="bi bi-folder-fill text-primary"></i> 
                                 <?= h($categoria) ?> 
@@ -693,6 +706,24 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
 
         // Inicializar contador
         updateSelectedCount();
+
+        // Filtro por categoría
+        const categoriaFilter = document.getElementById('categoria-filter');
+        if (categoriaFilter) {
+            categoriaFilter.addEventListener('change', function() {
+                const selectedCategoria = this.value;
+                const categorySections = document.querySelectorAll('.category-section');
+                
+                categorySections.forEach(section => {
+                    const categoria = section.getAttribute('data-categoria');
+                    if (selectedCategoria === 'all' || categoria === selectedCategoria) {
+                        section.style.display = 'block';
+                    } else {
+                        section.style.display = 'none';
+                    }
+                });
+            });
+        }
     </script>
 </body>
 </html>

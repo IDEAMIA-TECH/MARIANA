@@ -37,6 +37,16 @@ class RequirementController
         $requirements = Requirement::getByProject($projectId);
         $availableMaterials = Material::all(null, null, false); // Solo activos
 
+        // Obtener categorías únicas de los requerimientos
+        $categorias = [];
+        foreach ($requirements as $req) {
+            $cat = $req['categoria'] ?? 'Sin Categoría';
+            if (!in_array($cat, $categorias)) {
+                $categorias[] = $cat;
+            }
+        }
+        sort($categorias);
+
         require_once __DIR__ . '/../views/requirements/index.php';
     }
 
