@@ -190,19 +190,19 @@ class DeliveryController
                 continue;
             }
 
-            $data = [
-                'project_id' => $projectId,
-                'material_id' => $materialId,
-                'qty_entregada' => $qty,
-                'entregado_a' => $entregadoA,
-                'entregado_por' => $user['id'],
-                'fecha_entrega' => $fecha,
+        $data = [
+            'project_id' => $projectId,
+            'material_id' => $materialId,
+            'qty_entregada' => $qty,
+            'entregado_a' => $entregadoA,
+            'entregado_por' => $user['id'],
+            'fecha_entrega' => $fecha,
                 'comentarios' => $comentarios
-            ];
+        ];
 
-            try {
-                $deliveryId = Delivery::create($data);
-                if ($deliveryId) {
+        try {
+            $deliveryId = Delivery::create($data);
+            if ($deliveryId) {
                     $success++;
                 } else {
                     $errors[] = "Fila " . ($i + 1) . ": Error al registrar";
@@ -214,7 +214,7 @@ class DeliveryController
 
         if ($success > 0 && count($errors) === 0) {
             setFlashMessage('success', "Entrega registrada con $success producto(s). El inventario se actualizó automáticamente.");
-            redirect(base_url("deliveries.php?project_id=$projectId"));
+                redirect(base_url("deliveries.php?project_id=$projectId"));
             return;
         }
 
@@ -233,8 +233,8 @@ class DeliveryController
             $errorMsg .= "\n... y " . (count($errors) - 5) . " más";
         }
         setFlashMessage('error', $errorMsg);
-        redirect(base_url("deliveries.php?project_id=$projectId&action=create"));
-    }
+            redirect(base_url("deliveries.php?project_id=$projectId&action=create"));
+        }
 
     /**
      * Mostrar formulario de edición de entrega

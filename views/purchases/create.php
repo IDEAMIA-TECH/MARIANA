@@ -81,27 +81,27 @@ $projectId = $project['id'];
                                         <div class="col-md-5">
                                             <label class="form-label">Material</label>
                                             <select class="form-select material-select" name="material_id[]" required>
-                                                <option value="">Seleccionar material...</option>
-                                                <?php foreach ($materials as $material): ?>
-                                                    <option value="<?= $material['id'] ?>" data-unidad="<?= h($material['unidad']) ?>">
-                                                        <?= h($material['sku']) ?> - <?= h($material['descripcion']) ?> (<?= h($material['unidad']) ?>)
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
+                                    <option value="">Seleccionar material...</option>
+                                    <?php foreach ($materials as $material): ?>
+                                        <option value="<?= $material['id'] ?>" data-unidad="<?= h($material['unidad']) ?>">
+                                            <?= h($material['sku']) ?> - <?= h($material['descripcion']) ?> (<?= h($material['unidad']) ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
                                             <small class="form-text text-muted unidad-hint">Unidad del material</small>
-                                        </div>
+                            </div>
                                         <div class="col-md-3">
                                             <label class="form-label">Cantidad</label>
                                             <input type="number" class="form-control qty-input" name="qty_comprada[]" required min="0.01" step="0.01" placeholder="0.00">
-                                        </div>
+                                </div>
                                         <div class="col-md-3">
                                             <label class="form-label">Costo Unitario</label>
-                                            <div class="input-group">
+                                    <div class="input-group">
                                                 <select class="form-select moneda-select" name="moneda[]" style="max-width: 100px;">
-                                                    <option value="MXN" selected>MXN</option>
-                                                    <option value="USD">USD</option>
-                                                    <option value="EUR">EUR</option>
-                                                </select>
+                                            <option value="MXN" selected>MXN</option>
+                                            <option value="USD">USD</option>
+                                            <option value="EUR">EUR</option>
+                                        </select>
                                                 <input type="number" class="form-control costo-input" name="costo_unitario[]" required min="0" step="0.0001" placeholder="0.00">
                                             </div>
                                             <div class="mt-1 d-none tc-wrapper">
@@ -216,11 +216,11 @@ $projectId = $project['id'];
             const symbols = { 'MXN': '$', 'USD': 'US$', 'EUR': '€' };
             Object.keys(totalsByCurrency).forEach(moneda => {
                 const li = document.createElement('li');
-                const symbol = symbols[moneda] || '$';
+            const symbol = symbols[moneda] || '$';
                 li.textContent = moneda + ': ' + symbol + totalsByCurrency[moneda].toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 list.appendChild(li);
             });
-
+            
             document.getElementById('summary-total-usd').textContent = 'US$' + totalUSD.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             document.getElementById('summary-total-mxn').textContent = '$' + totalMXN.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             // actualizar tarjetas superiores

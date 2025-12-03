@@ -153,20 +153,20 @@ class PurchaseController
             if ($qty <= 0) { $errors++; continue; }
             if ($costo < 0) { $errors++; continue; }
 
-            $data = [
-                'project_id' => $projectId,
-                'material_id' => $materialId,
-                'qty_comprada' => $qty,
-                'costo_unitario' => $costo,
+        $data = [
+            'project_id' => $projectId,
+            'material_id' => $materialId,
+            'qty_comprada' => $qty,
+            'costo_unitario' => $costo,
                 'moneda' => $moneda,
                 'tipo_cambio' => ($moneda === 'USD' && $tc > 0) ? $tc : null,
                 'proveedor' => $proveedor,
                 'numero_factura' => $numeroFactura,
-                'comprado_por' => $user['id'],
-                'fecha_compra' => $fecha
-            ];
+            'comprado_por' => $user['id'],
+            'fecha_compra' => $fecha
+        ];
 
-            $purchaseId = Purchase::create($data);
+        $purchaseId = Purchase::create($data);
             if ($purchaseId) { $success++; } else { $errors++; }
         }
 

@@ -56,16 +56,16 @@ $projectId = $project['id'];
                                             <label class="form-label">Material</label>
                                             <select class="form-select material-select" name="material_id[]" required>
                                                 <option value="">Buscar por código o nombre...</option>
-                                                <?php foreach ($materials as $material): ?>
-                                                    <option value="<?= $material['id'] ?>" 
-                                                            data-disponible="<?= $material['qty_disponible'] ?>"
+                                    <?php foreach ($materials as $material): ?>
+                                        <option value="<?= $material['id'] ?>" 
+                                                data-disponible="<?= $material['qty_disponible'] ?>"
                                                             data-unidad="<?= h($material['unidad']) ?>"
                                                             data-sku="<?= h($material['sku']) ?>">
-                                                        <?= h($material['sku']) ?> - <?= h($material['descripcion']) ?> 
-                                                        (Disponible: <?= number_format($material['qty_disponible'], 2) ?> <?= h($material['unidad']) ?>)
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
+                                            <?= h($material['sku']) ?> - <?= h($material['descripcion']) ?> 
+                                            (Disponible: <?= number_format($material['qty_disponible'], 2) ?> <?= h($material['unidad']) ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
                                             <small class="form-text text-muted disponible-hint">Selecciona un material</small>
                                         </div>
                                         <div class="col-md-3">
@@ -82,8 +82,8 @@ $projectId = $project['id'];
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
-                                    </div>
-                                </div>
+                            </div>
+                            </div>
                                 <button type="button" class="btn btn-outline-success btn-sm" id="add-item">
                                     <i class="bi bi-plus-circle"></i> Agregar producto
                                 </button>
@@ -100,10 +100,10 @@ $projectId = $project['id'];
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="fecha_entrega" class="form-label">Fecha de Entrega <span class="text-danger">*</span></label>
-                                    <input type="date" class="form-control" id="fecha_entrega" name="fecha_entrega" 
-                                           required value="<?= date('Y-m-d') ?>"
-                                           max="<?= date('Y-m-d') ?>">
+                                <label for="fecha_entrega" class="form-label">Fecha de Entrega <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="fecha_entrega" name="fecha_entrega" 
+                                       required value="<?= date('Y-m-d') ?>"
+                                       max="<?= date('Y-m-d') ?>">
                                 </div>
                             </div>
 
@@ -138,7 +138,7 @@ $projectId = $project['id'];
             const show = row.querySelector('.disponible-show');
             const qtyInput = row.querySelector('.qty-input');
             const qtyError = row.querySelector('.qty-error');
-            
+
             if (select && window.jQuery) {
                 const selected = jQuery(select).find(':selected');
                 if (selected.val()) {
@@ -150,8 +150,8 @@ $projectId = $project['id'];
                     show.value = disponible.toFixed(2) + ' ' + unidad;
                     qtyInput.setAttribute('max', disponible);
                     qtyInput.setAttribute('data-disponible', disponible);
-                    qtyError.style.display = 'none';
-                } else {
+                qtyError.style.display = 'none';
+            } else {
                     hint.textContent = 'Selecciona un material';
                     show.value = '';
                     qtyInput.removeAttribute('max');
@@ -202,9 +202,9 @@ $projectId = $project['id'];
                         jQuery(select).select2('destroy');
                     }
                     row.remove();
-                }
-            });
-            
+            }
+        });
+
             updateDisponibleHint(row);
         }
 
@@ -234,7 +234,7 @@ $projectId = $project['id'];
                 const qtyInput = row.querySelector('.qty-input');
                 const max = parseFloat(qtyInput.getAttribute('max')) || 0;
                 const value = parseFloat(qtyInput.value) || 0;
-                
+            
                 if (value > max && max > 0) {
                     hasError = true;
                     validateQty(row);
