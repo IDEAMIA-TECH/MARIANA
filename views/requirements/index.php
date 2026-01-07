@@ -24,6 +24,17 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
             font-size: 12px;
             line-height: 20px;
         }
+        #searchFilter:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        .requirement-row[style*="display: none"] {
+            display: none !important;
+        }
+        #filterCount {
+            min-width: 120px;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
@@ -197,8 +208,22 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
 
         <!-- Lista de Requerimientos (BOM) -->
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="bi bi-box-seam"></i> Lista de Materiales (BOM)</h5>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="input-group" style="max-width: 300px;">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" 
+                               class="form-control" 
+                               id="searchFilter" 
+                               placeholder="Buscar por SKU, nombre o categoría..."
+                               autocomplete="off">
+                        <button class="btn btn-outline-secondary" type="button" id="clearSearch" title="Limpiar búsqueda">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                    <small class="text-muted" id="filterCount"></small>
+                </div>
             </div>
             <div class="card-body">
                 <?php if (empty($requirements)): ?>
@@ -245,15 +270,15 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
                         $categoryTotal = $categoryTotals[$categoria];
                         $categoryCount = count($categoryRequirements);
                     ?>
-                        <div class="mb-4">
+                        <div class="mb-4 requirement-category" data-category="<?= h(strtolower($categoria)) ?>">
                             <h5 class="mb-3">
                                 <i class="bi bi-folder-fill text-primary"></i> 
-                                <?= h($categoria) ?> 
-                                <span class="badge bg-secondary"><?= $categoryCount ?> material(es)</span>
+                                <span class="category-name"><?= h($categoria) ?></span> 
+                                <span class="badge bg-secondary category-count"><?= $categoryCount ?> material(es)</span>
                             </h5>
                             
                             <div class="table-responsive">
-                                <table class="table table-hover table-sm">
+                                <table class="table table-hover table-sm requirement-table">
                                     <thead class="table-light">
                                         <tr>
                                             <th>Material</th>
@@ -290,7 +315,11 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
                                         $color = 'danger';
                                     }
                                 ?>
-                                    <tr>
+                                    <tr class="requirement-row" 
+                                        data-sku="<?= strtolower(h($req['sku'])) ?>"
+                                        data-descripcion="<?= strtolower(h($req['descripcion'])) ?>"
+                                        data-categoria="<?= strtolower(h($req['categoria'] ?? '')) ?>"
+                                        data-search-text="<?= strtolower(h($req['sku'] . ' ' . $req['descripcion'] . ' ' . ($req['categoria'] ?? ''))) ?>">
                                         <td>
                                             <strong><?= h($req['descripcion']) ?></strong><br>
                                             <small class="text-muted">
@@ -693,6 +722,81 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
 
         // Inicializar contador
         updateSelectedCount();
+
+        // Filtro de búsqueda
+        const searchFilter = document.getElementById('searchFilter');
+        const clearSearch = document.getElementById('clearSearch');
+        const filterCount = document.getElementById('filterCount');
+        
+        function filterRequirements() {
+            const searchText = searchFilter.value.toLowerCase().trim();
+            const rows = document.querySelectorAll('.requirement-row');
+            const categories = document.querySelectorAll('.requirement-category');
+            let visibleCount = 0;
+            let hiddenCategories = new Set();
+            
+            if (searchText === '') {
+                // Mostrar todo
+                rows.forEach(row => {
+                    row.style.display = '';
+                    visibleCount++;
+                });
+                categories.forEach(cat => cat.style.display = '');
+                filterCount.textContent = '';
+                clearSearch.style.display = 'none';
+            } else {
+                // Filtrar filas
+                rows.forEach(row => {
+                    const searchData = row.getAttribute('data-search-text') || '';
+                    if (searchData.includes(searchText)) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                        const category = row.closest('.requirement-category');
+                        if (category) {
+                            hiddenCategories.add(category);
+                        }
+                    }
+                });
+                
+                // Ocultar categorías sin resultados visibles
+                categories.forEach(cat => {
+                    const visibleRows = cat.querySelectorAll('.requirement-row[style=""]');
+                    if (visibleRows.length === 0) {
+                        cat.style.display = 'none';
+                    } else {
+                        cat.style.display = '';
+                        // Actualizar contador de la categoría
+                        const countBadge = cat.querySelector('.category-count');
+                        if (countBadge) {
+                            const visibleInCat = cat.querySelectorAll('.requirement-row[style=""]').length;
+                            countBadge.textContent = visibleInCat + ' material(es)';
+                        }
+                    }
+                });
+                
+                filterCount.textContent = visibleCount + ' resultado(s)';
+                clearSearch.style.display = '';
+            }
+        }
+        
+        searchFilter.addEventListener('input', filterRequirements);
+        searchFilter.addEventListener('keyup', function(e) {
+            if (e.key === 'Escape') {
+                searchFilter.value = '';
+                filterRequirements();
+            }
+        });
+        
+        clearSearch.addEventListener('click', function() {
+            searchFilter.value = '';
+            filterRequirements();
+            searchFilter.focus();
+        });
+        
+        // Inicializar
+        clearSearch.style.display = 'none';
     </script>
 </body>
 </html>
