@@ -728,57 +728,78 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
         const clearSearch = document.getElementById('clearSearch');
         const filterCount = document.getElementById('filterCount');
         
+        // Guardar contadores originales de categorías
+        const originalCounts = new Map();
+        document.querySelectorAll('.requirement-category').forEach(cat => {
+            const countBadge = cat.querySelector('.category-count');
+            if (countBadge) {
+                const totalRows = cat.querySelectorAll('.requirement-row').length;
+                originalCounts.set(cat, totalRows);
+            }
+        });
+        
         function filterRequirements() {
             const searchText = searchFilter.value.toLowerCase().trim();
             const rows = document.querySelectorAll('.requirement-row');
             const categories = document.querySelectorAll('.requirement-category');
             let visibleCount = 0;
-            let hiddenCategories = new Set();
             
-            if (searchText === '') {
-                // Mostrar todo
+            if (!searchText) {
+                // Mostrar todo - restaurar estado original
                 rows.forEach(row => {
                     row.style.display = '';
-                    visibleCount++;
                 });
-                categories.forEach(cat => cat.style.display = '');
+                categories.forEach(cat => {
+                    cat.style.display = '';
+                    const countBadge = cat.querySelector('.category-count');
+                    if (countBadge && originalCounts.has(cat)) {
+                        countBadge.textContent = originalCounts.get(cat) + ' material(es)';
+                    }
+                });
                 filterCount.textContent = '';
                 clearSearch.style.display = 'none';
-            } else {
-                // Filtrar filas
-                rows.forEach(row => {
-                    const searchData = row.getAttribute('data-search-text') || '';
-                    if (searchData.includes(searchText)) {
-                        row.style.display = '';
-                        visibleCount++;
-                    } else {
-                        row.style.display = 'none';
-                        const category = row.closest('.requirement-category');
-                        if (category) {
-                            hiddenCategories.add(category);
-                        }
-                    }
-                });
-                
-                // Ocultar categorías sin resultados visibles
-                categories.forEach(cat => {
-                    const visibleRows = cat.querySelectorAll('.requirement-row[style=""]');
-                    if (visibleRows.length === 0) {
-                        cat.style.display = 'none';
-                    } else {
-                        cat.style.display = '';
-                        // Actualizar contador de la categoría
-                        const countBadge = cat.querySelector('.category-count');
-                        if (countBadge) {
-                            const visibleInCat = cat.querySelectorAll('.requirement-row[style=""]').length;
-                            countBadge.textContent = visibleInCat + ' material(es)';
-                        }
-                    }
-                });
-                
-                filterCount.textContent = visibleCount + ' resultado(s)';
-                clearSearch.style.display = '';
+                return;
             }
+            
+            // Filtrar filas
+            rows.forEach(row => {
+                const sku = (row.getAttribute('data-sku') || '').toLowerCase();
+                const descripcion = (row.getAttribute('data-descripcion') || '').toLowerCase();
+                const categoria = (row.getAttribute('data-categoria') || '').toLowerCase();
+                const searchData = row.getAttribute('data-search-text') || '';
+                
+                const matches = sku.includes(searchText) || 
+                               descripcion.includes(searchText) || 
+                               categoria.includes(searchText) ||
+                               searchData.includes(searchText);
+                
+                if (matches) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Mostrar/ocultar categorías según resultados visibles
+            categories.forEach(cat => {
+                const visibleRows = Array.from(cat.querySelectorAll('.requirement-row')).filter(row => {
+                    return row.style.display !== 'none';
+                });
+                
+                if (visibleRows.length === 0) {
+                    cat.style.display = 'none';
+                } else {
+                    cat.style.display = '';
+                    const countBadge = cat.querySelector('.category-count');
+                    if (countBadge) {
+                        countBadge.textContent = visibleRows.length + ' material(es)';
+                    }
+                }
+            });
+            
+            filterCount.textContent = visibleCount + ' resultado(s)';
+            clearSearch.style.display = '';
         }
         
         searchFilter.addEventListener('input', filterRequirements);
