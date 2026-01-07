@@ -18,7 +18,11 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
     <title>Requerimientos - <?= h($project['nombre']) ?> - <?= h(APP_NAME) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <style>
+        .select2-container .select2-selection--single { height: 38px; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 38px; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 36px; }
         .progress-bar-custom {
             height: 20px;
             font-size: 12px;
@@ -92,14 +96,15 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
                         <div class="row">
                             <div class="col-md-5 mb-3">
                                 <label for="material_id" class="form-label">Material <span class="text-danger">*</span></label>
-                                <select class="form-select" id="material_id" name="material_id" required>
-                                    <option value="">Seleccionar material...</option>
+                                <select class="form-select material-select-single" id="material_id" name="material_id" required>
+                                    <option value="">Buscar por código o nombre...</option>
                                     <?php foreach ($materialesDisponibles as $material): ?>
-                                        <option value="<?= $material['id'] ?>">
+                                        <option value="<?= $material['id'] ?>" data-sku="<?= h($material['sku']) ?>">
                                             <?= h($material['sku']) ?> - <?= h($material['descripcion']) ?> (<?= h($material['unidad']) ?>)
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
+                                <small class="form-text text-muted">Escribe para buscar por código SKU o nombre del material</small>
                             </div>
                             
                             <div class="col-md-3 mb-3">
@@ -633,6 +638,8 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         // Alternar entre modo simple y múltiple
         function toggleView() {
@@ -722,6 +729,19 @@ $materialesDisponibles = array_filter($availableMaterials, function($m) use ($ma
 
         // Inicializar contador
         updateSelectedCount();
+
+        // Inicializar Select2 en el selector de material (modo simple)
+        if (window.jQuery && typeof jQuery.fn.select2 === 'function') {
+            jQuery('#material_id').select2({
+                placeholder: 'Buscar por código o nombre...',
+                width: '100%',
+                language: {
+                    noResults: function() {
+                        return "No se encontraron materiales";
+                    }
+                }
+            });
+        }
 
         // Filtro de búsqueda
         const searchFilter = document.getElementById('searchFilter');
